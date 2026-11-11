@@ -13,9 +13,10 @@ test('plugin id is gentle-dot everywhere the shell or a script addresses it', as
   const panel = await read('Panel.qml');
   assert.match(client, /\bpluginId:\s*"gentle-dot"/);
   assert.match(client, /target:\s*"gentle-dot\.client"/);
-  assert.match(panel, /moduleName:\s*"gentle-dot"/);
-  assert.match(panel, /ipcTarget:\s*"gentle-dot"/);
-  assert.match(panel, /PluginService\.pluginDaemonInstances\["gentle-dot"\]/);
+  assert.match(panel, /\bpluginId:\s*"gentle-dot"/);
+  assert.match(panel, /PluginService\.pluginDaemonInstances\[pluginId\]|PluginService\.pluginDaemonInstances\["gentle-dot"\]/);
+  assert.match(panel, /horizontalBarPill/);
+  assert.match(panel, /popoutContent/);
   for (const name of ['Client.qml', 'Panel.qml', 'StickyPanel.qml', 'plugin.json'])
     assert.doesNotMatch(await read(name), /omarchy-gentle-dot/, name);
 });

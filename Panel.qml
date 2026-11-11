@@ -2,94 +2,35 @@ import QtQuick
 import QtQuick.Window
 import Quickshell
 import Quickshell.Wayland
+import qs.Common
+import qs.Modules.Plugins
 import qs.Services
+import qs.Widgets
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 
-Panel {
+PluginComponent {
   id: root
 
-  moduleName: "gentle-dot"
-  ipcTarget: "gentle-dot"
+  pluginId: "gentle-dot"
+  pluginService: PluginService
 
-  readonly property color foreground: bar ? bar.barForeground : Commons.Color.foreground
-  readonly property color urgent: bar ? bar.urgent : Commons.Color.urgent
+  readonly property var client: PluginService.pluginDaemonInstances[pluginId] ?? null
+
+  readonly property color foreground: Commons.Color.foreground
+  readonly property color urgent: Commons.Color.urgent
   readonly property color dim: Qt.darker(foreground, 1.4)
-  readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
-  // The theme's popup background with the user's panel opacity on top of its own alpha.
+  readonly property string fontFamily: Style.font.family
   readonly property color panelBackground: {
     var base = Commons.Color.popups.background
     return Qt.rgba(base.r, base.g, base.b, base.a * (client ? client.panelOpacity : 0.95))
   }
 
-  // The plugin's shared daemon (Client.qml), reached via DMS PluginService.
-  readonly property var client: PluginService.pluginDaemonInstances["gentle-dot"] ?? null
-
   readonly property bool pinned: client ? client.panelPinned : false
   readonly property bool detached: client ? client.detached : false
   readonly property bool ownsDetached: detached && client.detachedOwner === root
-  readonly property bool contentOpen: opened || ownsDetached
   readonly property bool settingsOpen: client && client.view === "settings"
-  // Popup/sticky: mapped open. Detached: mapped, not minimized, and active.
-  readonly property bool notificationVisible: detached
-    ? ownsDetached && detachedWindow.backingWindowVisible && !detachedWindow.minimized && detachedWindow.contentContainer.Window.active
-    : opened
-  onNotificationVisibleChanged: if (client) client.reportPanelVisibility(root, notificationVisible)
-  // This panel's chat is on screen (an unfocused detached window counts): the avatar animates only then.
-  readonly property bool chatOnScreen: ownsDetached
-    ? detachedWindow.backingWindowVisible && !detachedWindow.minimized
-    : opened
-
-  // Detached toggle policy: show/unminimize the single existing toplevel,
-  // never toggle a popup or hide the window. No compositor focus commands.
-  function showDetached() {
-    detachedWindow.minimized = false
-    detachedWindow.visible = Qt.binding(function() { return root.ownsDetached })
-  }
-
-  function open() {
-    if (detached) {
-      if (!client.detachedOwner) client.detachedOwner = root
-      client.detachedOwner.showDetached()
-    } else controller.show()
-  }
-
-  function toggle() {
-    if (detached) open()
-    else if (opened) close()
-    else open()
-  }
-
-  function dock(showPopup) {
-    if (!client) return
-    client.setDetached(false, null)
-    if (showPopup) open()
-  }
-
-  // Pinned/detached windows are outside the single-popout lifecycle.
-  function closeForPopoutSwitch() {
-    if (!pinned && !detached) close()
-  }
-
-  function navigatePanel(direction) {
-    if (!pinned && !detached) root.switchPanel(direction)
-  }
-
-  onDetachedChanged: if (detached) {
-    if (opened && !client.detachedOwner) client.detachedOwner = root
-    controller.hide()
-  }
-
-  Component.onDestruction: {
-    if (client) client.reportPanelVisibility(root, false)
-    if (client) client.reportPanelOpen(root, false)
-    if (client && client.detachedOwner === root) client.setDetached(false, null)
-  }
-
-  onPinnedChanged: if (opened) Qt.callLater(function() {
-    if (root.opened && panel.focusTarget) panel.focusTarget.forceActiveFocus()
-  })
   readonly property string connection: client ? client.connection : "stopped"
   readonly property bool connected: client ? client.connected : false
   readonly property string agentState: connected ? client.agentState : ""
@@ -102,31 +43,6 @@ Panel {
     if (fatal || needsYou) return urgent
     if (busy) return Commons.Color.accent
     return foreground
-  }
-
-  visible: true
-  implicitWidth: button.implicitWidth
-  implicitHeight: button.implicitHeight
-
-  function pushSettings() {
-    if (!client) return
-    client.configure({
-      nodePath: setting("nodePath", "node"),
-      serverUrl: setting("serverUrl", "ws://127.0.0.1:4317/ws"),
-      tokenFile: setting("tokenFile", "~/.gentle-dot/token"),
-      voiceSendOnStop: setting("voiceSendOnStop", false),
-      notifications: setting("notifications", true),
-      notificationSound: setting("notificationSound", true),
-      panelOpacity: setting("panelOpacity", 0.95),
-      avatarSleepMinutes: setting("avatarSleepMinutes", 30)
-    })
-  }
-
-  // The daemon's web UI, where model providers are signed in.
-  function webUrl() {
-    var url = client ? client.serverUrl : ""
-    var match = url.match(/^ws(s?):\/\/([^\/?#]+)/)
-    return match ? "http" + match[1] + "://" + match[2] : "http://127.0.0.1:4317"
   }
 
   function connectionLabel() {
@@ -157,203 +73,190 @@ Panel {
     return (agent ? connectionLabel() + "  ·  " + agent : connectionLabel()).toUpperCase()
   }
 
-  onClientChanged: {
-    pushSettings()
-    if (client) client.reportPanelVisibility(root, notificationVisible)
-    if (client) client.reportPanelOpen(root, contentOpen)
-  }
-  onSettingsChanged: pushSettings()
-  onOpenedChanged: if (opened) {
-    chat.scrollToEnd()
-    Qt.callLater(function() {
-      if (!root.opened) return
-      if (!root.settingsOpen && chat.hasAsks) chat.focusAsk(root.client.pendingAsks[0].requestId)
-      else if (panel.focusTarget) panel.focusTarget.forceActiveFocus()
+  function pushSettings() {
+    if (!client) return
+    var pd = pluginData || {}
+    function setting(name, fallback) { return pd[name] !== undefined ? pd[name] : fallback }
+    client.configure({
+      nodePath: setting("nodePath", "node"),
+      serverUrl: setting("serverUrl", "ws://127.0.0.1:4317/ws"),
+      tokenFile: setting("tokenFile", "~/.gentle-dot/token"),
+      voiceSendOnStop: setting("voiceSendOnStop", false),
+      notifications: setting("notifications", true),
+      notificationSound: setting("notificationSound", true),
+      panelOpacity: setting("panelOpacity", 0.95),
+      avatarSleepMinutes: setting("avatarSleepMinutes", 30)
     })
   }
 
-  Connections {
-    target: root.client
-    function onViewChanged() {
-      if (root.contentOpen) Qt.callLater(function() {
-        if (root.contentOpen && panel.focusTarget) panel.focusTarget.forceActiveFocus()
-      })
-    }
-    function onAskArrived(requestId) {
-      // Never summon or focus a closed panel when the daemon asks for help.
-      if (root.opened && !root.settingsOpen && !root.pinned && !root.detached) Qt.callLater(function() {
-        if (root.opened && !root.settingsOpen && !root.pinned && !root.detached) chat.focusAsk(requestId)
-      })
-    }
+  function webUrl() {
+    var url = client ? client.serverUrl : ""
+    var match = url.match(/^ws(s?):\/\/([^\/?#]+)/)
+    return match ? "http" + match[1] + "://" + match[2] : "http://127.0.0.1:4317"
   }
 
-  WidgetButton {
-    id: button
-    anchors.fill: parent
-    bar: root.bar
-    // Same rose as the Gentleman theme's menu widget: the emoji only reserves the
-    // slot (label hidden), the theme's dual-tone PNG is drawn over it.
-    text: "🌹"
-    fontFamily: "Noto Color Emoji"
-    fontSize: 18
-    horizontalMargin: 7.5
-    labelVisible: false
-    active: root.fatal || root.needsYou || root.busy
-    activeColor: root.statusColor
-    tooltipText: ""
-
-    Image {
-      id: barRose
-      anchors.centerIn: parent
-      width: 18
-      height: 18
-      source: "assets/rose-dualtone-136.png"
-      fillMode: Image.PreserveAspectFit
-      smooth: true
-      opacity: root.connected || root.fatal ? 1 : 0.45
-    }
-
-    // Status dot: accent while thinking or working, urgent when it needs you or failed.
-    Rectangle {
-      visible: root.fatal || root.needsYou || root.busy
-      width: 6
-      height: 6
-      radius: 3
-      color: root.statusColor
-      border.width: 1
-      border.color: Commons.Color.background
-      anchors.right: barRose.right
-      anchors.bottom: barRose.bottom
-      anchors.rightMargin: -2
-      anchors.bottomMargin: -1
-    }
-
-    onPressed: function(buttonCode) {
-      if (buttonCode === Qt.RightButton && root.fatal) root.client.restart()
-      else root.toggle()
+  function togglePanel() {
+    if (detached) {
+      if (!client.detachedOwner) client.detachedOwner = root
+      showDetached()
+    } else if (pinned) {
+      // sticky window stays; no popout toggle
+    } else {
+      root.expanded = !root.expanded
     }
   }
 
-  KeyboardPanel {
-    id: panel
-    anchorItem: button
-    owner: root
-    bar: root.bar
-    open: root.opened && !root.pinned && !root.detached
-    // Same distance from the bar and the screen edges as tiled windows (Hyprland's gaps_out;
-    // Style.gapsOut is half of it), so the chat lines up with the windows next to it.
-    margin: Style.gapsOut * 2
-    gap: Style.gapsOut * 2
-    // Drop the full-screen dismissal surfaces immediately on pin/close, rather
-    // than keeping them mapped for the stock card's fade-out animation.
-    visible: open
-    focusTarget: root.settingsOpen ? settingsView.focusTarget : (chat.askFocusTarget || composer)
-    contentWidth: panel.fittedContentWidth(560)
-    contentHeight: panel.cappedContentHeight(panel.screenH * 0.65)
-
-    Item {
-      id: popupContent
-      anchors.fill: parent
-    }
+  function showDetached() {
+    detachedWindow.minimized = false
   }
 
-  // KeyboardPanel exposes no background property: its card is the BorderSurface that
-  // holds the content item (popupContent -> contentHolder -> card).
-  Binding {
-    target: popupContent.parent && popupContent.parent.parent && "borderSpec" in popupContent.parent.parent
-      ? popupContent.parent.parent : null
-    property: "color"
-    value: root.panelBackground
+  function dock(showPopup) {
+    if (!client) return
+    client.setDetached(false, null)
+    if (showPopup) root.expanded = true
   }
 
-  StickyPanel {
-    id: stickyPanel
-    anchorItem: button
-    bar: root.bar
-    open: root.opened && root.pinned && !root.detached
-    contentWidth: panel.contentWidth
-    contentHeight: panel.contentHeight
-    background: root.panelBackground
+  onClientChanged: pushSettings()
+  onPluginDataChanged: pushSettings()
+  Component.onCompleted: pushSettings()
+
+  readonly property bool contentOpen: root.expanded || ownsDetached || pinned
+  onContentOpenChanged: if (client) client.reportPanelOpen(root, contentOpen)
+  onDetachedChanged: if (detached && root.expanded) root.expanded = false
+
+  Component.onDestruction: {
+    if (client) client.reportPanelVisibility(root, false)
+    if (client) client.reportPanelOpen(root, false)
+    if (client && client.detachedOwner === root) client.setDetached(false, null)
   }
 
-  DetachedWindow {
-    id: detachedWindow
-    open: root.ownsDetached
-    initialWidth: panel.contentWidth
-    initialHeight: panel.contentHeight
-    background: root.panelBackground
-    onDockRequested: root.dock(false)
-    onBackingWindowVisibleChanged: if (backingWindowVisible && root.ownsDetached) Qt.callLater(function() {
-      if (root.ownsDetached && panel.focusTarget) panel.focusTarget.forceActiveFocus()
-    })
-  }
+  horizontalBarPill: Component {
+    StyledRect {
+      implicitHeight: Theme.barHeight
+      implicitWidth: pillRow.implicitWidth + Theme.spacingM
+      radius: Theme.cornerRadius
+      color: Theme.surfaceContainerHigh
 
-  // The image popup: a full-screen overlay on this panel's screen while its chat is shown.
-  PanelWindow {
-    id: viewerWindow
-    screen: button.QsWindow.window ? button.QsWindow.window.screen : null
-    visible: root.contentOpen && !!root.client && root.client.viewerImage !== null
-    color: "transparent"
-    exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.namespace: "gentle-dot-image"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-    anchors { top: true; bottom: true; left: true; right: true }
+      Row {
+        id: pillRow
+        anchors.centerIn: parent
+        spacing: Theme.spacingXS
 
-    ImageViewer {
-      anchors.fill: parent
-      client: root.client
-      foreground: root.foreground
-      fontFamily: root.fontFamily
-    }
-  }
-  onContentOpenChanged: {
-    // Connection details are hidden again whenever the panel opens or closes (S16).
-    if (client) client.reportPanelOpen(root, contentOpen)
-    if (!contentOpen && client && !client.panelVisible) client.closeImage()
-  }
+        Item {
+          width: Theme.iconSize
+          height: Theme.iconSize
+          anchors.verticalCenter: parent.verticalCenter
 
-  // The popup's full-screen dismissal layer would sit above the file dialog and close the
-  // panel on the first click into it: pin while the dialog is open, then unpin again.
-  property bool pinnedForPicker: false
-  Connections {
-    target: composer
-    function onPickerOpenChanged() {
-      if (!root.client) return
-      if (composer.pickerOpen && root.opened && !root.pinned && !root.detached) {
-        root.pinnedForPicker = true
-        root.client.setPinned(true)
-      } else if (!composer.pickerOpen && root.pinnedForPicker) {
-        root.pinnedForPicker = false
-        root.client.setPinned(false)
-      }
-    }
-  }
+          Image {
+            id: barRose
+            anchors.centerIn: parent
+            width: Theme.iconSizeSmall
+            height: Theme.iconSizeSmall
+            source: Qt.resolvedUrl("assets/rose-dualtone-136.png")
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+            opacity: root.connected || root.fatal ? 1 : 0.45
+          }
+          Rectangle {
+            visible: root.fatal || root.needsYou || root.busy
+            width: 6; height: 6; radius: 3
+            color: root.statusColor
+            border.width: 1
+            border.color: Theme.background
+            anchors.right: barRose.right
+            anchors.bottom: barRose.bottom
+            anchors.rightMargin: -2
+            anchors.bottomMargin: -1
+          }
+        }
 
-  // Reparent, do not recreate: composer, settings and ask drafts survive modes.
-  PanelKeyCatcher {
-      id: keyCatcher
-      parent: root.ownsDetached ? detachedWindow.contentContainer
-        : (root.pinned ? stickyPanel.contentContainer : popupContent)
-      anchors.fill: parent
-      blocked: root.settingsOpen || composer.activeFocus || chat.hasAsks
-      onCloseRequested: {
-        if (root.client && root.client.voice.active) root.client.voice.cancel()
-        else if (!root.pinned && !root.detached) root.close()
-      }
-      onTabRequested: function(direction) { root.navigatePanel(direction) }
-      onActivateRequested: composer.forceActiveFocus()
-
-      // The avatar's eyes follow the pointer over the chat; when it leaves, they return to the
-      // mood's own gaze (nothing asks the compositor where the pointer is).
-      HoverHandler {
-        id: pointerWatch
-        onHoveredChanged: if (!hovered) composer.avatar.pointerLeft()
-        onPointChanged: if (hovered) {
-          var at = keyCatcher.mapToItem(composer.avatar, point.position.x, point.position.y)
-          composer.avatar.pointAt(at.x, at.y)
+        StyledText {
+          visible: root.fatal || root.needsYou || root.busy
+          text: root.fatal ? "!" : (root.needsYou ? "?" : "…")
+          color: root.statusColor
+          font.pixelSize: Theme.fontSizeSmall
+          anchors.verticalCenter: parent.verticalCenter
         }
       }
+
+      MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: (mouse) => {
+          if (mouse.button === Qt.RightButton && root.fatal && root.client) root.client.restart()
+          else root.togglePanel()
+        }
+      }
+    }
+  }
+
+  verticalBarPill: Component {
+    StyledRect {
+      implicitWidth: Theme.barHeight
+      implicitHeight: Theme.barHeight
+      radius: Theme.cornerRadius
+      color: Theme.surfaceContainerHigh
+
+      Item {
+        anchors.centerIn: parent
+        width: Theme.iconSizeSmall
+        height: Theme.iconSizeSmall
+        Image {
+          anchors.fill: parent
+          source: Qt.resolvedUrl("assets/rose-dualtone-136.png")
+          fillMode: Image.PreserveAspectFit
+          smooth: true
+          opacity: root.connected || root.fatal ? 1 : 0.45
+        }
+        Rectangle {
+          visible: root.fatal || root.needsYou || root.busy
+          width: 6; height: 6; radius: 3
+          color: root.statusColor
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+        }
+      }
+
+      MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: (mouse) => {
+          if (mouse.button === Qt.RightButton && root.fatal && root.client) root.client.restart()
+          else root.togglePanel()
+        }
+      }
+    }
+  }
+
+  popoutWidth: 560
+  popoutHeight: 700
+
+  popoutContent: Component {
+    PopoutComponent {
+      id: popout
+      headerText: "Gentle Dot"
+      showCloseButton: false
+
+      Item {
+        id: popoutBody
+        width: parent.width
+        height: 640
+
+        // Reuse full chat/settings UI inline for popout
+        Loader {
+          anchors.fill: parent
+          sourceComponent: mainUiComponent
+        }
+      }
+    }
+  }
+
+  // Main UI shared between popout, sticky, and detached modes
+  Component {
+    id: mainUiComponent
+    Item {
+      id: uiRoot
+      anchors.fill: parent
 
       Column {
         id: header
@@ -366,46 +269,38 @@ Panel {
           width: parent.width
           title: root.client ? root.client.headerTitle : "Gentle Dot"
           meta: root.stateLine()
-          detail: root.model === "unknown" ? "" : root.model
+          detail: root.model === "unknown" ? "" : (root.model || "")
           foreground: root.foreground
           fontFamily: root.fontFamily
-
 
           iconComponent: Component {
             Item {
               implicitWidth: Style.font.display
               implicitHeight: Style.font.display
-
               Image {
-                id: heroRose
                 anchors.fill: parent
-                source: "assets/rose-dualtone-136.png"
+                source: Qt.resolvedUrl("assets/rose-dualtone-136.png")
                 fillMode: Image.PreserveAspectFit
                 smooth: true
                 opacity: root.connected || root.fatal ? 1 : 0.45
               }
               Rectangle {
                 visible: root.fatal || root.needsYou || root.busy
-                width: 8
-                height: 8
-                radius: 4
+                width: 8; height: 8; radius: 4
                 color: root.statusColor
                 border.width: 1
                 border.color: Commons.Color.background
-                anchors.right: heroRose.right
-                anchors.bottom: heroRose.bottom
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
               }
             }
           }
         }
 
-        // Icon-only actions, the same control Omarchy's own panels use for inline actions,
-        // aligned to the right edge of the header.
         Row {
           anchors.right: parent.right
           spacing: Style.space(6)
 
-          // Hides or shows hosts, addresses and URLs here and in Settings, for screen sharing.
           PanelActionButton {
             iconText: root.client ? root.client.privacyIcon : ""
             tooltipText: root.client ? root.client.privacyTooltip : ""
@@ -419,13 +314,13 @@ Panel {
             tooltipText: root.settingsOpen ? "Back to chat" : "Settings"
             foreground: root.foreground
             fontFamily: root.fontFamily
-            onClicked: root.client.view = root.settingsOpen ? "chat" : "settings"
+            onClicked: if (root.client) root.client.view = root.settingsOpen ? "chat" : "settings"
           }
 
           PanelActionButton {
             visible: !root.detached
             iconText: root.pinned ? "󰐃" : "󰐄"
-            tooltipText: root.pinned ? "Unpin (close on outside click)" : "Pin (keep open)"
+            tooltipText: root.pinned ? "Unpin" : "Pin"
             foreground: root.pinned ? Commons.Color.accent : root.foreground
             fontFamily: root.fontFamily
             onClicked: if (root.client) root.client.setPinned(!root.pinned)
@@ -433,22 +328,13 @@ Panel {
 
           PanelActionButton {
             iconText: root.detached ? "󰖲" : "󰏌"
-            tooltipText: root.detached ? "Dock back to the bar" : "Detach into a window"
+            tooltipText: root.detached ? "Dock" : "Detach"
             foreground: root.foreground
             fontFamily: root.fontFamily
             onClicked: {
               if (root.detached) root.dock(true)
               else if (root.client) root.client.setDetached(true, root)
             }
-          }
-
-          PanelActionButton {
-            iconText: "󰅖"
-            tooltipText: "Close"
-            foreground: root.foreground
-            hoverColor: root.urgent
-            fontFamily: root.fontFamily
-            onClicked: root.detached ? root.dock(false) : root.close()
           }
         }
 
@@ -463,9 +349,7 @@ Panel {
           font.pixelSize: Style.font.caption
         }
 
-        PanelSeparator {
-          foreground: root.foreground
-        }
+        PanelSeparator { foreground: root.foreground }
       }
 
       ChatView {
@@ -502,7 +386,6 @@ Panel {
         anchors.centerIn: chat
         width: chat.width
         spacing: Style.space(12)
-
         Text {
           width: parent.width
           text: root.client ? root.client.displayText(root.client.fatalMessage) : ""
@@ -512,14 +395,13 @@ Panel {
           horizontalAlignment: Text.AlignHCenter
           wrapMode: Text.Wrap
         }
-
         Button {
           anchors.horizontalCenter: parent.horizontalCenter
           text: "Retry"
           foreground: root.foreground
           fontFamily: root.fontFamily
           bordered: true
-          onClicked: root.client.restart()
+          onClicked: if (root.client) root.client.restart()
         }
       }
 
@@ -556,32 +438,6 @@ Panel {
           font.pixelSize: Style.font.caption
         }
 
-        Text {
-          visible: root.client && (root.client.voice.active || root.client.voice.error !== "")
-          width: parent.width
-          text: !root.client ? "" : root.client.voice.error || (root.client.voice.state === "recording"
-            ? "● Recording · " + root.client.voice.seconds.toFixed(1) + "s · Escape to cancel"
-            : root.client.voice.state === "transcribing" ? "Transcribing…"
-            : root.client.voice.state === "cancelling" ? "Cancelling…" : "Loading voice…")
-          color: root.client && root.client.voice.error ? root.urgent : Commons.Color.accent
-          font.family: root.fontFamily
-          font.pixelSize: Style.font.caption
-          textFormat: Text.PlainText
-          wrapMode: Text.Wrap
-        }
-
-        Rectangle {
-          visible: root.client && root.client.voice.state === "recording"
-          width: parent.width
-          height: Style.space(4)
-          color: root.dim
-          Rectangle {
-            width: parent.width * Math.min(1, root.client ? root.client.voice.rms * 4 : 0)
-            height: parent.height
-            color: Commons.Color.accent
-          }
-        }
-
         Composer {
           id: composer
           width: parent.width
@@ -589,19 +445,13 @@ Panel {
           foreground: root.foreground
           urgent: root.urgent
           busy: root.busy
-          avatarActive: root.chatOnScreen
+          avatarActive: root.contentOpen
           avatarAlpha: root.panelBackground.a
           font.family: root.fontFamily
           onSent: chat.scrollToEnd()
-          onEscapePressed: {
-            if (root.client && root.client.voice.active) root.client.voice.cancel()
-            else if (!root.pinned && !root.detached) root.close()
-          }
-          onTabPressed: function(direction) { root.navigatePanel(direction) }
         }
       }
 
-      // Files or text dropped anywhere on the chat, in every mode (this content is reparented).
       DropOverlay {
         anchors.fill: parent
         z: 10
@@ -611,5 +461,61 @@ Panel {
         accent: Commons.Color.accent
         fontFamily: root.fontFamily
       }
+    }
+  }
+
+  // Sticky pinned window (kept as Quickshell window per S4)
+  StickyPanel {
+    id: stickyPanel
+    anchorItem: root
+    bar: null
+    open: root.pinned && !root.detached
+    contentWidth: 560
+    contentHeight: 640
+    background: root.panelBackground
+
+    Loader {
+      id: stickyLoader
+      anchors.fill: stickyPanel.contentContainer
+      active: stickyPanel.open
+      sourceComponent: mainUiComponent
+    }
+  }
+
+  // Detached floating window (kept as Quickshell window per S4)
+  DetachedWindow {
+    id: detachedWindow
+    open: root.ownsDetached
+    initialWidth: 560
+    initialHeight: 640
+    background: root.panelBackground
+    onDockRequested: root.dock(false)
+
+    Loader {
+      id: detachedLoader
+      anchors.fill: detachedWindow.contentContainer
+      active: detachedWindow.open
+      sourceComponent: mainUiComponent
+    }
+  }
+
+  // Image viewer overlay
+  PanelWindow {
+    id: viewerWindow
+    screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+    visible: root.contentOpen && !!root.client && root.client.viewerImage !== null
+    color: "transparent"
+    exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.namespace: "gentle-dot-image"
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    anchors { top: true; bottom: true; left: true; right: true }
+
+    ImageViewer {
+      anchors.fill: parent
+      client: root.client
+      foreground: root.foreground
+      fontFamily: root.fontFamily
+    }
   }
 }
