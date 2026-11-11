@@ -1,8 +1,8 @@
 import test from 'node:test';
 import { poll, qml } from './composer-harness.test.mjs';
 
-// The Omarchy notification service plays no sound, so the plugin does: one freedesktop sound
-// per kind, skipped when the user turned sounds off or Omarchy's Do Not Disturb is on.
+// The DMS notification service plays no sound, so the plugin does: one freedesktop sound
+// per kind, skipped when the user turned sounds off or DMS Do Not Disturb is on.
 test('notification sounds: per kind, off switch, Do Not Disturb', async t => {
   await qml(t, `
   Plugin.Client {
@@ -18,7 +18,8 @@ test('notification sounds: per kind, off switch, Do Not Disturb', async t => {
     function send(obj) { return true }
     notifier.notifyCommand: [Qt.resolvedUrl("record").toString().replace("file://", "")]
     notifier.soundCommandPath: Qt.resolvedUrl("record-sound").toString().replace("file://", "")
-    notifier.dndPath: Qt.resolvedUrl("missing.json").toString().replace("file://", "")
+    notifier.dndOverrideActive: true
+    notifier.dndOverrideValue: false
     Connections {
       target: client.notifier
       function onCommandOutput(line) { client.notified = client.notified.concat([JSON.parse(line)]) }
@@ -69,11 +70,11 @@ test('notification sounds: per kind, off switch, Do Not Disturb', async t => {
         counts(3, 3)
         client.reportPanelVisibility(checks, false)
 
-        // Do Not Disturb in ~/.local/state/omarchy/notifications.json silences the sound only.
-        client.notifier.dndPath = Qt.resolvedUrl("dnd.json").toString().replace("file://", "")
+        // DMS Do Not Disturb silences the sound only.
+        client.notifier.dndOverrideValue = true
         reply("r3")
         counts(4, 3)
-        client.notifier.dndPath = Qt.resolvedUrl("missing.json").toString().replace("file://", "")
+        client.notifier.dndOverrideValue = false
 
         // The switch persists with the other settings and silences the sound only.
         client.entrySettings = {serverUrl: "wss://mac.example/ws", tokenFile: "unchanged", notifications: true}

@@ -92,7 +92,7 @@ test('history images with an uploadId are fetched once and shown as thumbnails; 
   ${helpers}
   function fetches() { return client.sent.filter(function(m) { return m.type === "fetch_attachment" }) }
   // Where the bridge caches a fetched file; the client takes no other path for it (S22.1).
-  function cached(name) { return Quickshell.env("XDG_RUNTIME_DIR") + "/omarchy-gentle-dot/cache/${ID}/" + name }
+  function cached(name) { return Quickshell.env("XDG_RUNTIME_DIR") + "/gentle-dot/cache/${ID}/" + name }
   function fetchOf(name) { return fetches().filter(function(m) { return m.name === name }) }
   function chip(index, name) {
     return find(row(index), "attachmentChip").filter(function(c) { return find(c, "chipName")[0].text === name })[0]
@@ -180,8 +180,8 @@ test('history images with an uploadId are fetched once and shown as thumbnails; 
   Timer { interval: 150; running: true; onTriggered: checks.run() }
   `, {files: {
     'shot.png': png(),
-    [`omarchy-gentle-dot/cache/${ID}/from-mac.png`]: png(6, 4),
-    [`omarchy-gentle-dot/cache/${ID}/report.pdf`]: '%PDF-1.4\n',
+    [`gentle-dot/cache/${ID}/from-mac.png`]: png(6, 4),
+    [`gentle-dot/cache/${ID}/report.pdf`]: '%PDF-1.4\n',
     'open': '#!/bin/sh\nprintf "%s" "$1" > "$(dirname "$0")/opened"\n',
   }});
 });
@@ -257,7 +257,7 @@ test('Open runs xdg-open only for images, PDFs and plain text; other files show 
   }
   ${helpers}
   function fetchOf(name) { return client.sent.filter(function(m) { return m.type === "fetch_attachment" && m.name === name }) }
-  function cached(name) { return Quickshell.env("XDG_RUNTIME_DIR") + "/omarchy-gentle-dot/cache/${ID}/" + name }
+  function cached(name) { return Quickshell.env("XDG_RUNTIME_DIR") + "/gentle-dot/cache/${ID}/" + name }
   property var probe: Qt.createQmlObject("import Quickshell.Io; Process { id: proc; property alias out: collector.text; property bool done: false; stdout: StdioCollector { id: collector; waitForEnd: true; onStreamFinished: proc.done = true } }", chat)
   function read(name) {
     probe.done = false
@@ -304,9 +304,9 @@ test('Open runs xdg-open only for images, PDFs and plain text; other files show 
   }
   Timer { interval: 150; running: true; onTriggered: checks.run() }
   `, {files: {
-    [`omarchy-gentle-dot/cache/${ID}/tool.desktop`]: '[Desktop Entry]\nType=Application\nExec=true\n',
-    [`omarchy-gentle-dot/cache/${ID}/fake.pdf`]: '#!/bin/sh\ntrue\n',
-    [`omarchy-gentle-dot/cache/${ID}/notes.txt`]: 'hello',
+    [`gentle-dot/cache/${ID}/tool.desktop`]: '[Desktop Entry]\nType=Application\nExec=true\n',
+    [`gentle-dot/cache/${ID}/fake.pdf`]: '#!/bin/sh\ntrue\n',
+    [`gentle-dot/cache/${ID}/notes.txt`]: 'hello',
     'open': '#!/bin/sh\nprintf "%s\\n" "$1" >> "$(dirname "$0")/opened"\n',
     'copy': '#!/bin/sh\ncat > "$(dirname "$0")/copied"\n',
   }});

@@ -24,7 +24,7 @@ async function tempDir(prefix) {
   return dir;
 }
 
-const storePath = (state) => join(state, "omarchy-gentle-dot", "message-times.json");
+const storePath = (state) => join(state, "gentle-dot", "message-times.json");
 
 // --- the module, with a fixed clock -------------------------------------------------------------
 
@@ -46,9 +46,9 @@ const user = (id, text, extra = {}) => ({ id, role: "user", text, activities: []
 const reply = (id, text, extra = {}) => ({ id, role: "assistant", text, activities: [], ...extra });
 
 test("timesFile follows XDG_STATE_HOME, else ~/.local/state", () => {
-  assert.equal(timesFile({ XDG_STATE_HOME: "/x/state" }), "/x/state/omarchy-gentle-dot/message-times.json");
-  assert.match(timesFile({}), /\/\.local\/state\/omarchy-gentle-dot\/message-times\.json$/);
-  assert.match(timesFile({ XDG_STATE_HOME: "relative/dir" }), /\/\.local\/state\/omarchy-gentle-dot\/message-times\.json$/);
+  assert.equal(timesFile({ XDG_STATE_HOME: "/x/state" }), "/x/state/gentle-dot/message-times.json");
+  assert.match(timesFile({}), /\/\.local\/state\/gentle-dot\/message-times\.json$/);
+  assert.match(timesFile({ XDG_STATE_HOME: "relative/dir" }), /\/\.local\/state\/gentle-dot\/message-times\.json$/);
 });
 
 test("live messages are stamped and reconciled; whitespace-only differences still match", async () => {
@@ -232,7 +232,7 @@ test("conversations not seen for 90 days are dropped", async () => {
 test("a corrupt store is kept as .bak and replaced by a fresh one", async () => {
   const state = await tempDir("gd-times-");
   const file = storePath(state);
-  await mkdir(join(state, "omarchy-gentle-dot"), { recursive: true });
+  await mkdir(join(state, "gentle-dot"), { recursive: true });
   await writeFile(file, "{not json");
   const now = clock();
   const { store, times } = await relayer(now, file);
@@ -361,8 +361,8 @@ test("bridge: live times survive a restart, the file is private and holds no tex
 
   const file = storePath(state);
   assert.equal((await stat(file)).mode & 0o777, 0o600);
-  assert.equal((await stat(join(state, "omarchy-gentle-dot"))).mode & 0o777, 0o700);
-  assert.deepEqual(await readdir(join(state, "omarchy-gentle-dot")), ["message-times.json"]);
+  assert.equal((await stat(join(state, "gentle-dot"))).mode & 0o777, 0o700);
+  assert.deepEqual(await readdir(join(state, "gentle-dot")), ["message-times.json"]);
   const raw = await readFile(file, "utf8");
   for (const secret of ["Remember", "this", "please", "Sure", "noted", CONVERSATION, "127.0.0.1", String(daemon.port), "ws://"]) {
     assert.equal(raw.includes(secret), false, `store contains ${secret}`);
@@ -425,7 +425,7 @@ test("bridge: another daemon URL never gets this daemon's times", async (t) => {
 
 test("bridge: a corrupt store file is set aside and a fresh one written 0600", async (t) => {
   const { daemon, state, start } = await setup(t);
-  const dir = join(state, "omarchy-gentle-dot");
+  const dir = join(state, "gentle-dot");
   await mkdir(dir, { recursive: true, mode: 0o755 });
   await writeFile(storePath(state), "\u0000garbage", { mode: 0o644 });
   const bridge = await start();

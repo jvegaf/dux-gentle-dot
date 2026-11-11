@@ -7,7 +7,7 @@
 // message with that role and text in the conversation. Every part is an HMAC-SHA256 under a
 // random salt kept in the file, so the file holds no message text, conversation id or host.
 //
-//   ${XDG_STATE_HOME:-~/.local/state}/omarchy-gentle-dot/message-times.json   (folder 0700, file 0600)
+//   ${XDG_STATE_HOME:-~/.local/state}/gentle-dot/message-times.json   (folder 0700, file 0600)
 //   {"version":1,"salt":"<base64url>","conversations":{"<daemon>:<conversation>":
 //     {"seen":<ms>,"times":{"u:<text>":[<ms>|null, ...]}}}}            (array position = occurrence)
 //
@@ -37,7 +37,7 @@ const TOUCH_MS = 3600 * 1000;
 
 export function timesFile(env = process.env) {
   const state = env.XDG_STATE_HOME?.startsWith("/") ? env.XDG_STATE_HOME : join(homedir(), ".local", "state");
-  return join(state, "omarchy-gentle-dot", "message-times.json");
+  return join(state, "gentle-dot", "message-times.json");
 }
 
 const validTime = (value) => typeof value === "number" && Number.isFinite(value) && value > 0;

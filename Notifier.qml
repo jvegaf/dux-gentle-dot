@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.Common
 
 // Owned once by Client, never by a per-monitor widget. The native notification
 // service supports libnotify's default action; each waiting sender is independent.
@@ -13,14 +14,15 @@ Item {
   readonly property var defaultCommand: [client.nodePath || "node",
     decodeURIComponent(String(Qt.resolvedUrl("bridge/notify.mjs")).replace(/^file:\/\//, ""))]
   property var notifyCommand: defaultCommand // Replaced by a recorder in tests.
-  // The Omarchy notification service plays no sound, so the plugin does.
+  // The DMS notification service plays no sound, so the plugin does.
   property string soundCommandPath: "pw-play" // Replaced by a recorder in tests.
   property string soundDir: "/usr/share/sounds/freedesktop/stereo/"
   // 1.5 s of silence played first: an idle output is suspended (WirePlumber, after 5 s) and
   // an HDMI monitor drops the first second or so when it wakes, which is the whole sound.
   readonly property string wakeClip: decodeURIComponent(String(Qt.resolvedUrl("assets/sounds/wake-silence.oga")).replace(/^file:\/\//, ""))
-  // Omarchy keeps Do Not Disturb here (plugins/notifications/Service.qml, key "dnd").
-  property string dndPath: (Quickshell.env("HOME") || "") + "/.local/state/omarchy/notifications.json"
+  // DMS Do Not Disturb (SessionData).
+  property bool dndOverrideActive: false
+  property bool dndOverrideValue: false
   // Only the loud ones: most freedesktop sounds peak around -11 to -20 dB and are
   // inaudible on monitor speakers (complete peaks at -3 dB, message at -6 dB).
   readonly property var sounds: ({
@@ -66,8 +68,8 @@ Item {
   }
 
   function doNotDisturb() {
-    dndFile.reload()
-    try { return JSON.parse(dndFile.text() || "{}").dnd === true } catch (e) { return false }
+    if (dndOverrideActive) return dndOverrideValue
+    try { return SessionData.doNotDisturb === true } catch (e) { return false }
   }
 
   function playSound(kind) {
@@ -146,13 +148,6 @@ Item {
       }
     }
   }
-  FileView {
-    id: dndFile
-    path: root.dndPath
-    blockLoading: true
-    printErrors: false
-  }
-
   Component {
     id: soundPlayer
     Process {

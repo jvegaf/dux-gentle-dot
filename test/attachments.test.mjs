@@ -68,7 +68,7 @@ test('stored attachments: upload ids, names, download URLs, auto-fetched types a
   assert.equal(downloadUrl('ws://127.0.0.1:4317/ws', 'u_bad', 'a.png'), '');
   assert.deepEqual(['image/png', 'IMAGE/JPEG', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml', 'application/pdf', ''].map(autoFetched),
     [true, true, true, true, false, false, false, false]);
-  assert.equal(fileUrl('/run/user/1000/omarchy-gentle-dot/cache/u_x/a #1?.png'), 'file:///run/user/1000/omarchy-gentle-dot/cache/u_x/a%20%231%3F.png');
+  assert.equal(fileUrl('/run/user/1000/gentle-dot/cache/u_x/a #1?.png'), 'file:///run/user/1000/gentle-dot/cache/u_x/a%20%231%3F.png');
 });
 
 // S22.1: Markdown comes from the daemon, so a local path or file:// image would let it show (and
@@ -243,7 +243,7 @@ test('Ctrl+V attaches a clipboard image as a private temp file, and pastes text 
         until(function() { return client.sent.length > 0 }, 10000, "the pasted image is attached")
         var inspect = client.sent[0]
         if (!inspect || inspect.type !== "inspect_files") throw Error("no attach " + JSON.stringify(client.sent))
-        var dir = Quickshell.env("XDG_RUNTIME_DIR") + "/omarchy-gentle-dot/"
+        var dir = Quickshell.env("XDG_RUNTIME_DIR") + "/gentle-dot/"
         if (inspect.paths[0].indexOf(dir + "pasted-") !== 0 || !/\\.png$/.test(inspect.paths[0])) throw Error("path " + inspect.paths[0])
         pasted.source = "file://" + inspect.paths[0]
         if (pasted.status !== Image.Ready || pasted.implicitWidth !== 4) throw Error("pasted bytes")
@@ -471,7 +471,7 @@ test('drag and drop: highlight while dragging, local files attach, other URLs on
         until(function() { return client.sent.length >= 3 }, 10000, "text drop not attached")
         if (client.sent.length !== 3) throw Error("text drop not attached " + JSON.stringify(client.sent))
         var path = client.sent[2].paths[0]
-        var dir = Quickshell.env("XDG_RUNTIME_DIR") + "/omarchy-gentle-dot/"
+        var dir = Quickshell.env("XDG_RUNTIME_DIR") + "/gentle-dot/"
         if (client.sent[2].type !== "inspect_files" || path.indexOf(dir) !== 0 || !/^dropped-text-\\d+\\.txt$/.test(path.slice(dir.length))) throw Error("path " + path)
         probe.command = ["sh", "-c", "stat -c %a -- \\"$1\\" \\"$2\\" && cat -- \\"$2\\"", "sh", dir, path]
         probe.running = true

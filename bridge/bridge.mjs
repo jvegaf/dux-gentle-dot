@@ -19,7 +19,7 @@
 //         a per-tool `view` of each live/history/earlier activity's detail and output
 //         (activity-view.mjs), raw text and raw activity fields retained (stream whitespace preferred for old daemons), `at` on live
 //         user_message/message_done and on history the bridge has seen before when the daemon
-//         sends none (times.mjs, kept in $XDG_STATE_HOME/omarchy-gentle-dot). Bridge events:
+//         sends none (times.mjs, kept in $XDG_STATE_HOME/gentle-dot). Bridge events:
 //         {"type":"bridge","state":"connecting"|"open"|"reconnecting"|"fatal", ...}
 //         {"type":"bridge_error","code":"bad_input"|"not_connected"|"message_times"|"bad_daemon_message","message":...}
 // Bridge-local stdin commands (never forwarded as is):
@@ -33,7 +33,7 @@
 //     {"type":"upload_error","requestId","code","message"[,"index","name","status"]} and nothing is sent.
 //   {"type":"fetch_attachment","requestId","uploadId","name"} -> GET <http(s) origin of --url>/upload/
 //     <uploadId>/<encoded name> (patched daemons, S14.7) with the same Bearer token, into the private cache
-//     $XDG_RUNTIME_DIR (or /tmp)/omarchy-gentle-dot/cache/<uploadId>/<name> (folders 0700, file 0600, at most the
+//     $XDG_RUNTIME_DIR (or /tmp)/gentle-dot/cache/<uploadId>/<name> (folders 0700, file 0600, at most the
 //     daemon's 25 MB per file, written to a .part file and renamed). A cached copy is reused and
 //     concurrent asks share one download. Answers {"type":"attachment_cached","requestId","uploadId",
 //     "name","path","mime"} (mime from the first bytes, as for local files) or {"type":"attachment_error",
@@ -218,10 +218,10 @@ const FETCH_TIMEOUT_MS = 60000;
 class TooLarge extends Error {}
 
 // The same folder the panel expects cached copies in (Client.qml cacheDir).
-const cacheRoot = () => join(process.env.XDG_RUNTIME_DIR || "/tmp", "omarchy-gentle-dot", "cache");
+const cacheRoot = () => join(process.env.XDG_RUNTIME_DIR || "/tmp", "gentle-dot", "cache");
 
 function cacheFolder(uploadId) {
-  privateDir(join(process.env.XDG_RUNTIME_DIR || "/tmp", "omarchy-gentle-dot"));
+  privateDir(join(process.env.XDG_RUNTIME_DIR || "/tmp", "gentle-dot"));
   return privateDir(join(privateDir(cacheRoot()), uploadId));
 }
 
