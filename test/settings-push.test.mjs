@@ -2,12 +2,19 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-// Panel.pushSettings hands the bar entry's settings to the shared service. A key it leaves out
-// disappears from entrySettings, and the next save writes shell.json without it (a sound the user
-// turned off comes back on). Every setting the manifest declares must be pushed with its default.
-test("pushSettings forwards every manifest setting with the manifest default", async () => {
-  const manifest = JSON.parse(await readFile(new URL("../manifest.json", import.meta.url), "utf8"));
-  const defaults = manifest.barWidget.defaults;
+// Panel.pushSettings hands plugin settings to the shared daemon service.
+// Every expected setting must be pushed with its default fallback.
+test("pushSettings forwards every expected setting with the default", async () => {
+  const defaults = {
+    nodePath: "node",
+    serverUrl: "ws://127.0.0.1:4317/ws",
+    tokenFile: "~/.gentle-dot/token",
+    voiceSendOnStop: false,
+    notifications: true,
+    notificationSound: true,
+    panelOpacity: 0.95,
+    avatarSleepMinutes: 30,
+  };
   const panel = await readFile(new URL("../Panel.qml", import.meta.url), "utf8");
   const body = panel.match(/function pushSettings\(\) \{[\s\S]*?client\.configure\(\{([\s\S]*?)\}\)/)[1];
   const pushed = Object.fromEntries(

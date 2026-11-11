@@ -1,11 +1,14 @@
 import QtQuick
 import Quickshell.Io
 import qs.Commons
+import qs.Modules.Plugins
 import qs.Ui
 import "privacy.mjs" as Privacy
 
-FocusScope {
+PluginSettings {
   id: root
+  pluginId: "gentle-dot"
+
   required property var client
   property color foreground: Color.foreground
   property color urgent: Color.urgent

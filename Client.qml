@@ -813,15 +813,15 @@ PluginComponent {
     tokenProbe.running = true
   }
 
-  // Persists the connection in this plugin's bar entry, then restarts the bridge
-  // with it. Local drops both keys so the entry falls back to the manifest defaults.
+  // Persists the connection in DMS pluginData, then restarts the bridge with it.
+  // Local clears serverUrl/tokenFile so defaults apply.
   function saveConnection(url, tokenPath) {
-    if (!shell || typeof shell.updateEntryInline !== "function") return false
+    if (!pluginService) return false
     var next = ({})
     for (var key in entrySettings) next[key] = entrySettings[key]
     if (url === localUrl && tokenPath === localTokenFile) {
-      delete next.serverUrl
-      delete next.tokenFile
+      next.serverUrl = ""
+      next.tokenFile = ""
     } else {
       next.serverUrl = url
       next.tokenFile = tokenPath
@@ -829,12 +829,14 @@ PluginComponent {
     return saveSettings(next)
   }
 
-  // One persistence path for connection and voice settings, preserving all keys.
+  // One persistence path for settings via DMS pluginData.
   function saveSettings(next) {
-    if (!shell || typeof shell.updateEntryInline !== "function") return false
-    // updateEntryInline() answers false when nothing changed, which is fine.
+    if (!pluginService) return false
     var unchanged = JSON.stringify(next) === JSON.stringify(entrySettings)
-    if (!shell.updateEntryInline(pluginId, next) && !unchanged) return false
+    if (unchanged) return false
+    for (var key in next) pluginService.savePluginData(pluginId, key, next[key])
+    // Remove keys no longer present by saving empty/default where appropriate is
+    // handled by callers; configure immediately for responsiveness.
     configure(next)
     return true
   }
@@ -1580,6 +1582,10 @@ PluginComponent {
   }
 
   onViewChanged: if (view === "settings") tailnet.refresh()
+
+  // DMS pluginData is the settings source of truth for this daemon.
+  onPluginDataChanged: if (pluginData) configure(pluginData)
+  Component.onCompleted: if (pluginData) configure(pluginData)
 
   Component.onDestruction: {
     stopping = true

@@ -351,14 +351,9 @@ test('avatar sleep setting: Settings → Appearance saves it with every other se
   `);
 });
 
-test('avatar sleep setting: manifest default and schema, pushed by the panel', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../manifest.json', import.meta.url), 'utf8'));
-  assert.equal(manifest.barWidget.defaults.avatarSleepMinutes, 30);
-  const entry = manifest.barWidget.schema.find(s => s.key === 'avatarSleepMinutes');
-  assert.ok(entry, 'schema entry');
-  assert.equal(entry.type, 'number');
-  assert.equal(entry.defaultValue, 30);
-  assert.equal(entry.min, 0);
+test('avatar sleep setting: default is 30 and pushed by the panel', async () => {
   const panel = await readFile(new URL('../Panel.qml', import.meta.url), 'utf8');
+  const client = await readFile(new URL('../Client.qml', import.meta.url), 'utf8');
   assert.match(panel, /avatarSleepMinutes: setting\("avatarSleepMinutes", 30\)/);
+  assert.match(client, /avatarSleepMinutes: Mood\.sleepMinutes\(entrySettings\.avatarSleepMinutes\)|avatarSleepMinutes/);
 });

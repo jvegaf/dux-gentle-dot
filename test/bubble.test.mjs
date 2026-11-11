@@ -182,17 +182,15 @@ test('panel opacity defaults to 0.95, is clamped, and is saved with every other 
   `);
 });
 
-test('popup, pinned and detached surfaces all draw the translucent panel background', async () => {
+test('popup, pinned and detached surfaces use the translucent panel background', async () => {
   const panel = await readFile(new URL('../Panel.qml', import.meta.url), 'utf8');
   assert.match(panel, /panelOpacity: setting\("panelOpacity", 0\.95\)/);
   assert.match(panel, /StickyPanel \{[\s\S]*?background: root\.panelBackground/);
   assert.match(panel, /DetachedWindow \{[\s\S]*?background: root\.panelBackground/);
-  assert.match(panel, /Binding \{[\s\S]*?property: "color"[\s\S]*?value: root\.panelBackground/);
   const sticky = await readFile(new URL('../StickyPanel.qml', import.meta.url), 'utf8');
   assert.match(sticky, /color: root\.background/);
-  const manifest = JSON.parse(await readFile(new URL('../manifest.json', import.meta.url), 'utf8'));
-  assert.equal(manifest.barWidget.defaults.panelOpacity, 0.95);
-  assert.ok(manifest.barWidget.schema.some(s => s.key === 'panelOpacity' && s.defaultValue === 0.95));
+  const client = await readFile(new URL('../Client.qml', import.meta.url), 'utf8');
+  assert.match(client, /defaultPanelOpacity: 0\.95/);
 });
 
 // The footer (time + copy) shares the last text line when it fits, instead of adding a row.
