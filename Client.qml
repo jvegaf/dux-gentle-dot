@@ -604,7 +604,7 @@ PluginComponent {
   // The bridge needs Node.js 22+. A missing or older Node stops the panel with this message
   // (fatalReason node_missing or node_too_old) instead of a silent failure.
   readonly property int nodeMinMajor: 22
-  readonly property string nodeMessage: "Gentle Dot needs Node.js 22 or newer. Install it (e.g. `omarchy pkg add nodejs` or mise) and reopen the panel."
+  readonly property string nodeMessage: "Gentle Dot needs Node.js 22 or newer. Install it with your system package manager or mise, then reopen the panel."
   // The nodePath that last passed the version check; a failed one is checked again on Retry.
   property string nodeVerified: ""
   property string agentState: ""
@@ -915,7 +915,7 @@ PluginComponent {
     noteActivity()
     var body = String(text || "").trim()
     if (!body || !connected) return false
-    return send({ type: "send", text: body, requestId: newRequestId("omarchy") })
+    return send({ type: "send", text: body, requestId: newRequestId("gentle-dot") })
   }
 
   // With files: the bridge uploads them, then sends the message; the draft and the chips
@@ -925,7 +925,7 @@ PluginComponent {
     if (uploading) return false
     if (attachments.length) {
       if (!connected) return false
-      uploadRequestId = newRequestId("omarchy")
+      uploadRequestId = newRequestId("gentle-dot")
       uploadPaths = attachments.map(function(file) { return file.path })
       if (!send({ type: "upload_files", requestId: uploadRequestId, text: String(draft || "").trim(),
         paths: uploadPaths })) return false
@@ -1481,7 +1481,7 @@ PluginComponent {
     }
   }
 
-  // Scriptable entry points: `quickshell ipc -p $OMARCHY_PATH/shell call gentle-dot.client <fn>`.
+  // Scriptable entry points: `dms ipc call gentle-dot.client <fn>`.
   IpcHandler {
     target: "gentle-dot.client"
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-// The optional speech runtime (sherpa-onnx-node), kept outside the plugin folder: Omarchy's
-// installer never runs plugin code and its validator refuses symlinks in the plugin folder, so
-// Settings → Voice → Enable voice installs it with npm into $XDG_DATA_HOME/omarchy-gentle-dot/runtime.
+// The optional speech runtime (sherpa-onnx-node), kept outside the plugin folder.
+// Settings → Voice → Enable voice installs it with npm into $XDG_DATA_HOME/gentle-dot/runtime.
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { mkdir, mkdtemp, rename, rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -15,11 +14,11 @@ const exec = promisify(execFile);
 export const RUNTIME = Object.freeze({ name: 'sherpa-onnx-node', version: '2.0.1' });
 const LABEL = `${RUNTIME.name} ${RUNTIME.version}`;
 export const RUNTIME_MISSING = 'Voice needs a one-time setup: Settings → Voice → Enable voice.';
-export const NPM_MISSING = 'Voice setup needs npm, which comes with Node.js. Install Node.js 22 or newer (e.g. `omarchy pkg add nodejs npm` or mise) and try again.';
+export const NPM_MISSING = 'Voice setup needs npm, which comes with Node.js. Install Node.js 22 or newer with your system package manager or mise, then try again.';
 export const PLUGIN_DIR = fileURLToPath(new URL('..', import.meta.url));
 const fail = (code, message, extra) => Object.assign(Error(message), { code }, extra);
 
-export const dataDir = () => join(process.env.XDG_DATA_HOME || join(homedir(), '.local/share'), 'omarchy-gentle-dot');
+export const dataDir = () => join(process.env.XDG_DATA_HOME || join(homedir(), '.local/share'), 'gentle-dot');
 export const defaultRuntimeDir = () => join(dataDir(), 'runtime');
 // GENTLE_DOT_PLUGIN_RUNTIME=off ignores a developer checkout's node_modules (tests).
 const defaultPluginDir = () => process.env.GENTLE_DOT_PLUGIN_RUNTIME === 'off' ? null : PLUGIN_DIR;

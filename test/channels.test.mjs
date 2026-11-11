@@ -264,7 +264,7 @@ test('the remote health check gives curl its URL on stdin (-K -), never on argv'
   function path(name) { return String(Qt.resolvedUrl(name)).replace(/^file:\\/\\//, "") }
   FloatingWindow {
     visible: true; width: 640; height: 2400
-    Plugin.SettingsView { id: settings; client: client; anchors.fill: parent; hyprctlCommand: "true"; curlCommand: [path("curl")] }
+    Plugin.SettingsView { id: settings; client: client; anchors.fill: parent; curlCommand: [path("curl")] }
   }
   property var probe: Qt.createQmlObject("import Quickshell.Io; Process { id: proc; property alias out: collector.text; property bool done: false; stdout: StdioCollector { id: collector; waitForEnd: true; onStreamFinished: proc.done = true } }", client)
   TestCase {
@@ -494,7 +494,7 @@ test('the health check refuses an address with a quote or backslash instead of w
   function path(name) { return String(Qt.resolvedUrl(name)).replace(/^file:\\/\\//, "") }
   FloatingWindow {
     visible: true; width: 640; height: 2400
-    Plugin.SettingsView { id: settings; client: client; anchors.fill: parent; hyprctlCommand: "true"; curlCommand: [path("curl")] }
+    Plugin.SettingsView { id: settings; client: client; anchors.fill: parent; curlCommand: [path("curl")] }
   }
   TestCase {
     id: checks; when: false

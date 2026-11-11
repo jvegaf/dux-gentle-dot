@@ -75,7 +75,7 @@ test('Settings → Voice: Enable voice installs and downloads with progress, err
   }
   FloatingWindow {
     visible: true; width: 640; height: 2400
-    Plugin.SettingsView { id: settings; client: client; anchors.fill: parent; hyprctlCommand: "true" }
+    Plugin.SettingsView { id: settings; client: client; anchors.fill: parent;  }
   TestCase {
     id: checks; when: false
     ${helpers}

@@ -53,14 +53,14 @@ const npmLog = async dir => (await readFile(join(dir, 'npm.log'), 'utf8')).trim(
 test('the runtime is pinned and installed with npm outside the plugin folder', () => {
   assert.deepEqual(RUNTIME, { name: 'sherpa-onnx-node', version: '2.0.1' });
   assert.equal(RUNTIME_MISSING, 'Voice needs a one-time setup: Settings → Voice → Enable voice.');
-  assert.deepEqual(npmArgs('/data/omarchy-gentle-dot/runtime'), ['install', '--prefix', '/data/omarchy-gentle-dot/runtime',
+  assert.deepEqual(npmArgs('/data/gentle-dot/runtime'), ['install', '--prefix', '/data/gentle-dot/runtime',
     '--no-save', '--no-package-lock', '--omit=dev', '--no-bin-links', '--no-audit', '--no-fund', 'sherpa-onnx-node@2.0.1']);
   const saved = process.env.XDG_DATA_HOME;
   try {
     process.env.XDG_DATA_HOME = '/scratch/data';
-    assert.equal(defaultRuntimeDir(), '/scratch/data/omarchy-gentle-dot/runtime');
+    assert.equal(defaultRuntimeDir(), '/scratch/data/gentle-dot/runtime');
     delete process.env.XDG_DATA_HOME;
-    assert.match(defaultRuntimeDir(), /\/\.local\/share\/omarchy-gentle-dot\/runtime$/);
+    assert.match(defaultRuntimeDir(), /\/\.local\/share\/gentle-dot\/runtime$/);
   } finally {
     if (saved === undefined) delete process.env.XDG_DATA_HOME;
     else process.env.XDG_DATA_HOME = saved;
@@ -122,18 +122,18 @@ test('the transcriber reports runtime_missing with the setup message', async () 
 
 test('install runs npm with the pinned arguments into a staging dir, verifies the module loads, then moves it in place', async t => {
   const dir = await scratch(t);
-  const runtimeDir = join(dir, 'data/omarchy-gentle-dot/runtime');
+  const runtimeDir = join(dir, 'data/gentle-dot/runtime');
   const events = [];
   const installer = new RuntimeInstaller({ dir: runtimeDir, npm: [await fakeNpm(dir, 'ok')] });
   const result = await installer.install(e => events.push(e));
   const [call] = await npmLog(dir);
   const prefix = call.args[2];
   assert.deepEqual(call.args, npmArgs(prefix));
-  assert.match(prefix, new RegExp('^' + join(dir, 'data/omarchy-gentle-dot/.runtime-')));
+  assert.match(prefix, new RegExp('^' + join(dir, 'data/gentle-dot/.runtime-')));
   assert.equal(call.cwd, prefix);
   assert.deepEqual(result, { type: 'runtime', state: 'installed', source: 'runtime', version: '2.0.1', dir: runtimeDir });
   assert.deepEqual(events.map(e => e.type + ':' + (e.step || '') + ':' + e.state), ['setup:runtime:installing', 'setup:runtime:verifying']);
-  assert.deepEqual(await readdir(join(dir, 'data/omarchy-gentle-dot')), ['runtime']);
+  assert.deepEqual(await readdir(join(dir, 'data/gentle-dot')), ['runtime']);
   assert.equal(loadRuntime({ runtimeDir, pluginDir: join(dir, 'none') }).module.source, 'installed');
 });
 
@@ -143,7 +143,7 @@ for (const [mode, code, message] of [
 ]) {
   test(`install failure (${mode}) leaves nothing behind and keeps a working runtime`, async t => {
     const dir = await scratch(t);
-    const root = join(dir, 'data/omarchy-gentle-dot');
+    const root = join(dir, 'data/gentle-dot');
     const runtimeDir = join(root, 'runtime');
     const installer = new RuntimeInstaller({ dir: runtimeDir, npm: [await fakeNpm(dir, mode)] });
     await assert.rejects(installer.install(), error => error.code === code && error.message === message);
@@ -160,7 +160,7 @@ test('install without npm says what to install', async t => {
   const dir = await scratch(t);
   const installer = new RuntimeInstaller({ dir: join(dir, 'runtime'), npm: [join(dir, 'no-such-npm')] });
   await assert.rejects(installer.install(), error => error.code === 'npm_missing'
-    && error.message === 'Voice setup needs npm, which comes with Node.js. Install Node.js 22 or newer (e.g. `omarchy pkg add nodejs npm` or mise) and try again.');
+    && error.message === 'Voice setup needs npm, which comes with Node.js. Install Node.js 22 or newer with your system package manager or mise, then try again.');
   assert.deepEqual(await readdir(dir), []);
 });
 
@@ -241,7 +241,7 @@ test('enable voice stops at a failed runtime install: no model download', async 
 
 // The model files exist with their pinned sizes (sparse), so status says installed without a download.
 async function sparseModel(data) {
-  const path = join(data, 'omarchy-gentle-dot/models', SPEC.dir);
+  const path = join(data, 'gentle-dot/models', SPEC.dir);
   await mkdir(path, { recursive: true });
   for (const { name, size } of SPEC.files) { await writeFile(join(path, name), ''); await truncate(join(path, name), size); }
 }
@@ -264,13 +264,13 @@ test('setup CLI: status, then enable with a fake npm, a ready model and no recor
   let { code, events } = await cli(['status'], env);
   assert.equal(code, 0);
   assert.deepEqual(events, [
-    { type: 'runtime', state: 'missing', source: '', version: '', dir: join(data, 'omarchy-gentle-dot/runtime'), message: RUNTIME_MISSING },
+    { type: 'runtime', state: 'missing', source: '', version: '', dir: join(data, 'gentle-dot/runtime'), message: RUNTIME_MISSING },
     { type: 'recorder', state: 'missing', command: '', message: 'Install pw-record (PipeWire) or parec (pulseaudio-utils) to record voice.' }
   ]);
   ({ code, events } = await cli(['enable'], env));
   assert.equal(code, 0, JSON.stringify(events));
   assert.deepEqual(events.find(e => e.type === 'runtime' && e.state === 'installed'),
-    { type: 'runtime', state: 'installed', source: 'runtime', version: '2.0.1', dir: join(data, 'omarchy-gentle-dot/runtime') });
+    { type: 'runtime', state: 'installed', source: 'runtime', version: '2.0.1', dir: join(data, 'gentle-dot/runtime') });
   assert.equal(events.find(e => e.type === 'model').state, 'installed');
   assert.deepEqual(events.at(-1), { type: 'setup', step: 'done', state: 'needs_recorder' });
   assert.equal((await npmLog(dir)).length, 1);
@@ -308,5 +308,5 @@ test('setup CLI: SIGTERM cancels a running install cleanly', async t => {
   const events = out.trim().split('\n').map(JSON.parse);
   assert.equal(code, 0);
   assert.deepEqual(events.find(e => e.type === 'error'), { type: 'error', code: 'cancelled', message: 'Voice setup cancelled.' });
-  assert.deepEqual(await readdir(join(data, 'omarchy-gentle-dot')).then(list => list.filter(name => !name.startsWith('models'))), []);
+  assert.deepEqual(await readdir(join(data, 'gentle-dot')).then(list => list.filter(name => !name.startsWith('models'))), []);
 });

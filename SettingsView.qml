@@ -25,16 +25,8 @@ PluginSettings {
   // The URL of the last test started from this view, so "Use this connection" applies exactly that one.
   property string testedUrl: ""
   property bool failed: false
-  // Keyboard shortcut (S19.3): detected from `hyprctl binds -j`, never written by the plugin.
-  property string hyprctlCommand: "hyprctl"
   // The /health probe; the URL goes to curl over stdin (-K -), never on its command line (S22.2).
   property var curlCommand: ["curl"]
-  property string clipboardCommand: "wl-copy"
-  readonly property string shortcutSnippet: decodeURIComponent(String(Qt.resolvedUrl("hypr/gentle-dot.lua")).replace(/^file:\/\//, ""))
-  property string shortcutState: "checking"   // checking | found | missing | unknown
-  property string shortcutKeys: "SUPER + ALT + D"
-  property string shortcutFeedback: ""
-  property bool shortcutFailed: false
   readonly property string host: hostField.text.trim()
   readonly property string port: portField.text.trim()
   readonly property string candidateUrl: !remoteMode ? client.localUrl : advanced ? customField.text.trim()
@@ -69,75 +61,6 @@ PluginSettings {
   }
 
   function result(text, error) { feedback = text; failed = error }
-
-  // A bind toggles this panel when it runs the toggle command (hyprlang exec) or, for Lua binds
-  // that hyprctl shows only as "__lua", carries the description hypr/gentle-dot.lua gives it.
-  function shortcutFrom(json) {
-    var binds
-    try { binds = JSON.parse(json) } catch (e) { return {state: "unknown", keys: "SUPER + ALT + D"} }
-    if (!Array.isArray(binds)) return {state: "unknown", keys: "SUPER + ALT + D"}
-    for (var i = 0; i < binds.length; i++) {
-      var bind = binds[i] || {}
-      if (bind.description === "Gentle Dot" || /omarchy-shell\s+shell\s+toggle\s+gentle-dot\b/.test(String(bind.arg || ""))) {
-        var mods = []
-        var names = [[64, "SUPER"], [4, "CTRL"], [8, "ALT"], [1, "SHIFT"]]
-        for (var j = 0; j < names.length; j++) if (bind.modmask & names[j][0]) mods.push(names[j][1])
-        return {state: "found", keys: mods.concat([String(bind.key || "").toUpperCase()]).join(" + ")}
-      }
-    }
-    return {state: "missing", keys: "SUPER + ALT + D"}
-  }
-
-  function checkShortcut() {
-    if (shortcutProbe.running) return
-    shortcutProbe.launched = false
-    shortcutProbe.command = [hyprctlCommand, "binds", "-j"]
-    shortcutProbe.running = true
-  }
-
-  function shortcutChecked(exitCode, text) {
-    var found = exitCode === 0 ? shortcutFrom(text) : {state: "unknown", keys: "SUPER + ALT + D"}
-    shortcutState = found.state
-    shortcutKeys = found.keys
-  }
-
-  // The snippet file (which starts with its one-line instruction) to the clipboard.
-  function copyShortcut() {
-    if (shortcutCopy.running) return
-    shortcutFeedback = ""
-    shortcutFailed = false
-    shortcutCopy.launched = false
-    shortcutCopy.command = ["sh", "-c", "\"$1\" < \"$2\"", "sh", clipboardCommand, shortcutSnippet]
-    shortcutCopy.running = true
-  }
-
-  function shortcutCopied(ok) {
-    shortcutFailed = !ok
-    shortcutFeedback = ok ? 'Copied. Save it as ~/.config/hypr/gentle-dot.lua and add require("hypr.gentle-dot") to ~/.config/hypr/hyprland.lua.'
-      : "Could not copy: install wl-clipboard, or copy " + shortcutSnippet + " by hand."
-  }
-
-  Process {
-    id: shortcutProbe
-    property bool launched: false
-    property string output: ""
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: shortcutProbe.output = text
-    }
-    onStarted: { launched = true; output = "" }
-    // No exited() when hyprctl cannot start (not on Hyprland).
-    onRunningChanged: if (!running && !launched) root.shortcutChecked(127, "")
-    onExited: function(exitCode) { Qt.callLater(function() { root.shortcutChecked(exitCode, shortcutProbe.output) }) }
-  }
-
-  Process {
-    id: shortcutCopy
-    property bool launched: false
-    onStarted: launched = true
-    onRunningChanged: if (!running && !launched) root.shortcutCopied(false)
-    onExited: function(exitCode) { root.shortcutCopied(exitCode === 0) }
-  }
 
   // A message as shown: masked with the service's known names plus the host being edited.
   function shown(text) {
@@ -239,8 +162,6 @@ PluginSettings {
   onVisibleChanged: {
     if (visible) {
       load()
-      checkShortcut()
-      shortcutFeedback = ""
       if (client.settingsSection === "voice") {
         flick.contentY = 0
         client.settingsSection = ""
@@ -250,7 +171,6 @@ PluginSettings {
   }
   Component.onCompleted: {
     load()
-    checkShortcut()
   }
   Keys.onEscapePressed: function(event) {
     if (client.voice.active) client.voice.cancel()
@@ -433,20 +353,8 @@ PluginSettings {
       Label {
         objectName: "shortcutState"
         width: parent.width
-        text: "Keyboard shortcut: " + root.shortcutKeys + " (" + ({found: "set up", missing: "not set up", unknown: "could not check"}[root.shortcutState]
-          || "checking") + ")"
-      }
-      Button {
-        objectName: "copyShortcut"
-        text: "Copy setup"
-        bordered: true
-        enabled: !shortcutCopy.running
-        onClicked: root.copyShortcut()
-      }
-      Label {
-        width: parent.width
-        text: root.shortcutFeedback || "Shows or hides this panel. The plugin never edits your Hyprland config: Copy setup puts the snippet on the clipboard for you to add."
-        color: root.shortcutFailed ? root.urgent : root.foreground
+        wrapMode: Text.Wrap
+        text: "Configure a DMS keybind to run: dms ipc call gentle-dot.client openChat"
       }
       Row {
         spacing: Theme.spacingS

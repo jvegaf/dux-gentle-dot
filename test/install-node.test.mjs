@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { poll, qml } from './composer-harness.test.mjs';
 
-const NODE_MESSAGE = 'Gentle Dot needs Node.js 22 or newer. Install it (e.g. `omarchy pkg add nodejs` or mise) and reopen the panel.';
+const NODE_MESSAGE = 'Gentle Dot needs Node.js 22 or newer. Install it with your system package manager or mise, then reopen the panel.';
 
 // Fake `node` commands. Each logs how it was called; anything but --version stands in for the
 // bridge and stops at once with a fatal line, so no daemon or network is involved.
@@ -84,5 +84,5 @@ test('a missing or too-old Node stops the panel with what to install, and Retry 
 test('the fatal view shows the message with a Retry that restarts the client', async () => {
   const panel = await readFile(new URL('../Panel.qml', import.meta.url), 'utf8');
   const fatal = panel.slice(panel.indexOf('visible: !root.settingsOpen && root.fatal'));
-  assert.match(fatal, /^[\s\S]*?root\.client\.displayText\(root\.client\.fatalMessage\)[\s\S]*?text: "Retry"[\s\S]*?onClicked: root\.client\.restart\(\)/);
+  assert.match(fatal, /^[\s\S]*?root\.client\.displayText\(root\.client\.fatalMessage\)[\s\S]*?text: "Retry"[\s\S]*?onClicked: (?:if \(root\.client\) )?root\.client\.restart\(\)/);
 });
