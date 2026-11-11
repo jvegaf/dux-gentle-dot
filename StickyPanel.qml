@@ -1,9 +1,8 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import qs.Commons
-import qs.Commons as Commons
-import qs.Ui
+import qs.Common
+import qs.Common
 
 // A card-sized surface, not a dismissal overlay. Outside clicks go directly
 // to applications; no popout coordinator or focus-loss handler can close it.
@@ -15,16 +14,16 @@ PanelWindow {
   property bool open: false
   property int contentWidth: 560
   property int contentHeight: 640
-  property int padding: Style.spacing.popupPadding
-  property color background: Commons.Color.popups.background
+  property int padding: Theme.spacingM
+  property color background: Theme.surfaceContainerHigh
   readonly property var anchorWindow: anchorItem ? anchorItem.QsWindow.window : null
   readonly property string barPos: bar ? bar.position : "top"
   readonly property bool verticalBar: barPos === "left" || barPos === "right"
   readonly property real barThickness: anchorWindow
     ? (verticalBar ? anchorWindow.width : anchorWindow.height) : 0
   // Hyprland's general:gaps_out, the gap tiled windows keep from the screen edges and the bar.
-  // Omarchy's Style.gapsOut is half of it (the gap its own popups use).
-  readonly property real windowGap: Style.gapsOut * 2
+  // Omarchy's Theme.spacingM is half of it (the gap its own popups use).
+  readonly property real windowGap: Theme.spacingM * 2
   readonly property real edgeInset: barThickness + windowGap
   property alias contentContainer: contentHolder
 
@@ -57,9 +56,9 @@ PanelWindow {
     id: card
     anchors.fill: parent
     color: root.background
-    borderSpec: Border.surfaceSpec("popups", "border", Commons.Color.popups.border, Math.max(1, Style.space(2)))
+    borderSpec: 0)
     padding: root.padding
-    radius: Style.cornerRadius
+    radius: Theme.cornerRadius
 
     Item {
       id: contentHolder

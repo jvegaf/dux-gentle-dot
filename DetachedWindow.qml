@@ -1,8 +1,7 @@
 import QtQuick
 import Quickshell
-import qs.Commons
-import qs.Commons as Commons
-
+import qs.Common
+import qs.Common
 // FloatingWindow is an xdg-toplevel, not a layer-shell surface. Hyprland owns
 // placement, tiling, resizing, fullscreen and maximize policy. The installed
 // Quickshell API has no per-window appId setter (the shell appId is shared).
@@ -13,7 +12,7 @@ FloatingWindow {
   property int initialWidth: 560
   property int initialHeight: 640
   property alias contentContainer: contentHolder
-  property color background: Commons.Color.popups.background
+  property color background: Theme.surfaceContainerHigh
   signal dockRequested()
 
   visible: open
@@ -27,6 +26,6 @@ FloatingWindow {
   Item {
     id: contentHolder
     anchors.fill: parent
-    anchors.margins: Style.spacing.popupPadding
+    anchors.margins: Theme.spacingM
   }
 }

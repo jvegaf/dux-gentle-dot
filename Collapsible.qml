@@ -1,7 +1,7 @@
 import QtQuick
-import qs.Ui
-import qs.Commons
-import qs.Commons as Commons
+
+import qs.Common
+import qs.Common
 import "bridge/attachments.mjs" as Attachments
 
 Column {
@@ -12,7 +12,7 @@ Column {
   property bool expanded: false
   property bool monospace: false
   property bool markdown: false
-  property color foreground: Commons.Color.foreground
+  property color foreground: Theme.surfaceText
   readonly property int lineCount: text.split("\n").length
   readonly property bool longContent: label !== "" || lineCount > limit
   // The body text, so a parent can tell where its last line ends.
@@ -26,9 +26,9 @@ Column {
   component ToggleRow: Rectangle {
     property string title: ""
     width: root.width
-    height: Math.max(Style.space(28), titleText.implicitHeight + Style.space(8))
-    radius: Style.cornerRadius
-    color: toggleMouse.containsMouse ? Style.hoverFillFor(root.foreground, Commons.Color.accent) : "transparent"
+    height: Math.max(28, titleText.implicitHeight + Theme.spacingS)
+    radius: Theme.cornerRadius
+    color: toggleMouse.containsMouse ? Theme.surfaceContainerHighest : "transparent"
     MouseArea {
       id: toggleMouse
       anchors.fill: parent
@@ -53,8 +53,8 @@ Column {
       textFormat: Text.PlainText
       color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.72)
       elide: Text.ElideRight
-      font.family: Style.font.family
-      font.pixelSize: Style.font.caption
+      font.family: Theme.fontFamily
+      font.pixelSize: Theme.fontSizeSmall
     }
   }
   ToggleRow {
@@ -71,8 +71,8 @@ Column {
     wrapMode: TextEdit.Wrap
     textFormat: root.markdown ? TextEdit.MarkdownText : TextEdit.PlainText
     color: root.foreground
-    font.family: root.monospace ? "JetBrainsMono Nerd Font" : Style.font.family
-    font.pixelSize: Style.font.body
+    font.family: root.monospace ? "JetBrainsMono Nerd Font" : Theme.fontFamily
+    font.pixelSize: Theme.fontSizeMedium
     onLinkActivated: function(link) { if (/^https?:\/\//.test(link)) Qt.openUrlExternally(link) }
   }
   ToggleRow {

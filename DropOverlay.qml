@@ -1,20 +1,19 @@
 import QtQuick
-import qs.Commons
-import qs.Commons as Commons
-
+import qs.Common
+import qs.Common
 // The chat's one drop target: files from a file manager, or text with no file, dropped
 // anywhere on the panel content. Shows "Drop to attach" while a drag is over it; the
 // client decides what attaches (Client.dropItems).
 Item {
   id: root
   property var client: null
-  property color foreground: Commons.Color.foreground
-  property color accent: Commons.Color.accent
-  property string fontFamily: Style.font.family
+  property color foreground: Theme.surfaceText
+  property color accent: Theme.primary
+  property string fontFamily: Theme.fontFamily
   property bool dragging: false
   // The popup background tinted with the accent, translucent enough to keep the chat in view.
   readonly property color tint: {
-    var mixed = Qt.tint(Commons.Color.popups.background, Qt.rgba(accent.r, accent.g, accent.b, 0.18))
+    var mixed = Qt.tint(Theme.surfaceContainerHigh, Qt.rgba(accent.r, accent.g, accent.b, 0.18))
     return Qt.rgba(mixed.r, mixed.g, mixed.b, 0.88)
   }
 
@@ -58,14 +57,14 @@ Item {
     objectName: "dropOverlayCard"
     visible: root.dragging
     anchors.fill: parent
-    radius: Style.cornerRadius
+    radius: Theme.cornerRadius
     color: root.tint
     border.width: 2
     border.color: root.accent
 
     Column {
       anchors.centerIn: parent
-      spacing: Style.space(6)
+      spacing: Theme.spacingXS
 
       Text {
         anchors.horizontalCenter: parent.horizontalCenter

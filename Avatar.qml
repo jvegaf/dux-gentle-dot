@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Shapes
-import qs.Commons as Commons
+import qs.Common
 import "avatar/mood.mjs" as Mood
 
 // The Tamagotchi next to the composer: two eyes and a moustache on a black square that
@@ -21,8 +21,8 @@ Item {
   // Black with the panel's own transparency.
   property real backgroundAlpha: 0.95
   property real radius: 0
-  property color eyeColor: Commons.Color.foreground
-  property color pupilColor: Commons.Color.background
+  property color eyeColor: Theme.surfaceText
+  property color pupilColor: Theme.background
   property color moustacheColor: Qt.rgba(0.94, 0.46, 0.66, 1)
   property int typingPause: 1500
   signal tapped()

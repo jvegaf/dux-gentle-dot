@@ -6,9 +6,8 @@ import qs.Common
 import qs.Modules.Plugins
 import qs.Services
 import qs.Widgets
-import qs.Commons
-import qs.Commons as Commons
-import qs.Ui
+import qs.Common
+import qs.Common
 
 PluginComponent {
   id: root
@@ -18,12 +17,12 @@ PluginComponent {
 
   readonly property var client: PluginService.pluginDaemonInstances[pluginId] ?? null
 
-  readonly property color foreground: Commons.Color.foreground
-  readonly property color urgent: Commons.Color.urgent
+  readonly property color foreground: Theme.surfaceText
+  readonly property color urgent: Theme.error
   readonly property color dim: Qt.darker(foreground, 1.4)
-  readonly property string fontFamily: Style.font.family
+  readonly property string fontFamily: Theme.fontFamily
   readonly property color panelBackground: {
-    var base = Commons.Color.popups.background
+    var base = Theme.surfaceContainerHigh
     return Qt.rgba(base.r, base.g, base.b, base.a * (client ? client.panelOpacity : 0.95))
   }
 
@@ -41,7 +40,7 @@ PluginComponent {
   readonly property bool modelMissing: connected && (model === "" || model === "unknown")
   readonly property color statusColor: {
     if (fatal || needsYou) return urgent
-    if (busy) return Commons.Color.accent
+    if (busy) return Theme.primary
     return foreground
   }
 
@@ -263,7 +262,7 @@ PluginComponent {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        spacing: Style.space(12)
+        spacing: Theme.spacingM
 
         PanelHero {
           width: parent.width
@@ -275,8 +274,8 @@ PluginComponent {
 
           iconComponent: Component {
             Item {
-              implicitWidth: Style.font.display
-              implicitHeight: Style.font.display
+              implicitWidth: Theme.fontSizeXLarge
+              implicitHeight: Theme.fontSizeXLarge
               Image {
                 anchors.fill: parent
                 source: Qt.resolvedUrl("assets/rose-dualtone-136.png")
@@ -289,7 +288,7 @@ PluginComponent {
                 width: 8; height: 8; radius: 4
                 color: root.statusColor
                 border.width: 1
-                border.color: Commons.Color.background
+                border.color: Theme.background
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
               }
@@ -299,7 +298,7 @@ PluginComponent {
 
         Row {
           anchors.right: parent.right
-          spacing: Style.space(6)
+          spacing: Theme.spacingXS
 
           PanelActionButton {
             iconText: root.client ? root.client.privacyIcon : ""
@@ -321,7 +320,7 @@ PluginComponent {
             visible: !root.detached
             iconText: root.pinned ? "󰐃" : "󰐄"
             tooltipText: root.pinned ? "Unpin" : "Pin"
-            foreground: root.pinned ? Commons.Color.accent : root.foreground
+            foreground: root.pinned ? Theme.primary : root.foreground
             fontFamily: root.fontFamily
             onClicked: if (root.client) root.client.setPinned(!root.pinned)
           }
@@ -346,7 +345,7 @@ PluginComponent {
           wrapMode: Text.Wrap
           textFormat: Text.PlainText
           font.family: root.fontFamily
-          font.pixelSize: Style.font.caption
+          font.pixelSize: Theme.fontSizeSmall
         }
 
         PanelSeparator { foreground: root.foreground }
@@ -357,14 +356,14 @@ PluginComponent {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: header.bottom
-        anchors.topMargin: Style.space(12)
+        anchors.topMargin: Theme.spacingM
         anchors.bottom: footer.top
-        anchors.bottomMargin: Style.space(8)
+        anchors.bottomMargin: Theme.spacingS
         visible: !root.settingsOpen && !root.fatal
         model: root.client ? root.client.messages : null
         client: root.client
         foreground: root.foreground
-        accent: Commons.Color.accent
+        accent: Theme.primary
         urgent: root.urgent
         fontFamily: root.fontFamily
       }
@@ -376,7 +375,7 @@ PluginComponent {
         text: root.connected ? "Ask Gentle Dot anything" : (root.client ? root.client.displayUrl(root.client.serverUrl) : "")
         color: root.dim
         font.family: root.fontFamily
-        font.pixelSize: Style.font.body
+        font.pixelSize: Theme.fontSizeMedium
         horizontalAlignment: Text.AlignHCenter
         elide: Text.ElideMiddle
       }
@@ -385,13 +384,13 @@ PluginComponent {
         visible: !root.settingsOpen && root.fatal
         anchors.centerIn: chat
         width: chat.width
-        spacing: Style.space(12)
+        spacing: Theme.spacingM
         Text {
           width: parent.width
           text: root.client ? root.client.displayText(root.client.fatalMessage) : ""
           color: root.urgent
           font.family: root.fontFamily
-          font.pixelSize: Style.font.body
+          font.pixelSize: Theme.fontSizeMedium
           horizontalAlignment: Text.AlignHCenter
           wrapMode: Text.Wrap
         }
@@ -410,7 +409,7 @@ PluginComponent {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: header.bottom
-        anchors.topMargin: Style.space(12)
+        anchors.topMargin: Theme.spacingM
         anchors.bottom: parent.bottom
         visible: root.settingsOpen
         client: root.client
@@ -425,7 +424,7 @@ PluginComponent {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        spacing: Style.space(8)
+        spacing: Theme.spacingS
 
         Text {
           visible: root.client !== null && root.client.notice !== ""
@@ -435,7 +434,7 @@ PluginComponent {
           wrapMode: Text.Wrap
           textFormat: Text.PlainText
           font.family: root.fontFamily
-          font.pixelSize: Style.font.caption
+          font.pixelSize: Theme.fontSizeSmall
         }
 
         Composer {
@@ -458,7 +457,7 @@ PluginComponent {
         enabled: !root.settingsOpen
         client: root.client
         foreground: root.foreground
-        accent: Commons.Color.accent
+        accent: Theme.primary
         fontFamily: root.fontFamily
       }
     }

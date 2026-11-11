@@ -1,15 +1,14 @@
 import QtQuick
 import Quickshell.Io
-import qs.Ui
-import qs.Commons
-import qs.Commons as Commons
 
+import qs.Common
+import qs.Common
 // One formatted action detail or output: a bridge `view` (bridge/activity-view.mjs) in the
 // small, dim style of the action lines. Code and terminal output reuse CodeBlock (copy, collapse).
 Column {
   id: root
   property var view: null
-  property color muted: Qt.rgba(Commons.Color.foreground.r, Commons.Color.foreground.g, Commons.Color.foreground.b, 0.65)
+  property color muted: Qt.rgba(Theme.surfaceText.r, Theme.surfaceText.g, Theme.surfaceText.b, 0.65)
   // Injectable command keeps headless tests off the real Wayland clipboard.
   property var clipboardCommand: ["wl-copy"]
   property string copyState: "Copy"
@@ -17,7 +16,7 @@ Column {
   readonly property var code: type === "code" ? view : (type === "path" && view.code ? view.code : null)
   readonly property var fieldItems: type === "fields" ? (view.items || []) : (view && view.extra ? view.extra : [])
   readonly property string plainText: type === "text" || type === "fields" ? String(view.text || "") : ""
-  spacing: Style.space(3)
+  spacing: 3
 
   function copy(text) {
     if (clipboard.running) return
@@ -40,7 +39,7 @@ Column {
     TextEdit {
       id: pathText
       objectName: "detailPath"
-      anchors.left: parent.left; anchors.right: pathCopy.left; anchors.rightMargin: Style.space(4)
+      anchors.left: parent.left; anchors.right: pathCopy.left; anchors.rightMargin: Theme.spacingXS
       anchors.verticalCenter: parent.verticalCenter
       text: root.type === "path" ? String(root.view.path || "") : ""
       textFormat: TextEdit.PlainText
@@ -49,7 +48,7 @@ Column {
       wrapMode: TextEdit.WrapAnywhere
       color: root.muted
       font.family: "JetBrainsMono Nerd Font"
-      font.pixelSize: Style.font.caption
+      font.pixelSize: Theme.fontSizeSmall
     }
     PanelActionButton {
       id: pathCopy
@@ -57,9 +56,9 @@ Column {
       anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
       iconText: root.copyState === "Copied" ? "✓" : "󰆏"
       tooltipText: root.copyState
-      foreground: root.copyState === "Copy failed" ? Commons.Color.urgent : root.muted
+      foreground: root.copyState === "Copy failed" ? Theme.error : root.muted
       fontFamily: "JetBrainsMono Nerd Font"
-      fontSize: Style.font.caption
+      fontSize: Theme.fontSizeSmall
       onClicked: root.copy(pathText.text)
     }
   }
@@ -70,7 +69,7 @@ Column {
     code: root.code ? String(root.code.code || "") : ""
     lang: root.code ? String(root.code.lang || "") : ""
     html: root.code ? String(root.code.html || "") : ""
-    fontPixelSize: Style.font.caption
+    fontPixelSize: Theme.fontSizeSmall
     clipboardCommand: root.clipboardCommand
   }
   Repeater {
@@ -85,8 +84,8 @@ Column {
       selectByMouse: true
       wrapMode: TextEdit.Wrap
       color: root.muted
-      font.family: Style.font.family
-      font.pixelSize: Style.font.caption
+      font.family: Theme.fontFamily
+      font.pixelSize: Theme.fontSizeSmall
     }
   }
   CodeBlock {
@@ -95,8 +94,8 @@ Column {
     width: root.width
     label: "output"
     code: root.type === "terminal" ? String(root.view.text || "") : ""
-    color: Qt.darker(Commons.Color.background, 1.45)
-    fontPixelSize: Style.font.caption
+    color: Qt.darker(Theme.background, 1.45)
+    fontPixelSize: Theme.fontSizeSmall
     clipboardCommand: root.clipboardCommand
   }
   Repeater {
@@ -110,13 +109,13 @@ Column {
       height: Math.max(itemTitle.implicitHeight, itemMeta.implicitHeight)
       Text {
         id: itemTitle
-        anchors.left: parent.left; anchors.right: itemMeta.left; anchors.rightMargin: Style.space(8)
+        anchors.left: parent.left; anchors.right: itemMeta.left; anchors.rightMargin: Theme.spacingS
         text: "• " + parent.text
         textFormat: Text.PlainText
         elide: Text.ElideRight
         color: root.muted
-        font.family: Style.font.family
-        font.pixelSize: Style.font.caption
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeSmall
       }
       Text {
         id: itemMeta
@@ -126,8 +125,8 @@ Column {
         textFormat: Text.PlainText
         elide: Text.ElideLeft
         color: Qt.rgba(root.muted.r, root.muted.g, root.muted.b, root.muted.a * 0.75)
-        font.family: Style.font.family
-        font.pixelSize: Style.font.caption
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeSmall
       }
     }
   }
@@ -138,8 +137,8 @@ Column {
     visible: more > 0 || cut
     text: (more > 0 ? "+" + more + " more" : "more") + (cut ? "…" : "")
     color: root.muted
-    font.family: Style.font.family
-    font.pixelSize: Style.font.caption
+    font.family: Theme.fontFamily
+    font.pixelSize: Theme.fontSizeSmall
   }
   TextEdit {
     objectName: "detailText"
@@ -152,6 +151,6 @@ Column {
     wrapMode: TextEdit.Wrap
     color: root.muted
     font.family: "JetBrainsMono Nerd Font"
-    font.pixelSize: Style.font.caption
+    font.pixelSize: Theme.fontSizeSmall
   }
 }

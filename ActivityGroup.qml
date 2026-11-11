@@ -1,15 +1,14 @@
 import QtQuick
-import qs.Commons
-import qs.Commons as Commons
-
+import qs.Common
+import qs.Common
 // Always-visible action list, separate from the assistant's answer card.
 Column {
   id: root
   property var activities: []
   readonly property int count: rows.count
   // Derive secondary text from foreground: some themes have a very dark muted token.
-  readonly property color muted: Qt.rgba(Commons.Color.foreground.r, Commons.Color.foreground.g, Commons.Color.foreground.b, 0.65)
-  spacing: Style.space(3)
+  readonly property color muted: Qt.rgba(Theme.surfaceText.r, Theme.surfaceText.g, Theme.surfaceText.b, 0.65)
+  spacing: 3
 
   function sourceFor(a) {
     if (a.source) return a.source
@@ -28,7 +27,7 @@ Column {
   }
   function iconColorFor(a) { return sourceColorFor(a) }
   function statusFor(a) { return a.status === "running" ? "◌" : (a.status === "failed" ? "✗" : "✓") }
-  function statusColorFor(a) { return a.status === "running" ? Commons.Color.accent : (a.status === "failed" ? Commons.Color.urgent : root.muted) }
+  function statusColorFor(a) { return a.status === "running" ? Theme.primary : (a.status === "failed" ? Theme.error : root.muted) }
   function titleFor(a) { return a.kind === "ask" ? "Asking you" : String(a.title || a.tool || a.kind || "Activity") }
 
   Repeater {
@@ -52,13 +51,13 @@ Column {
       }
       Column {
         id: content
-        x: Style.space(10)
+        x: Theme.spacingS
         width: parent.width - x
-        spacing: Style.space(3)
+        spacing: 3
         Rectangle {
           width: parent.width
-          height: Math.max(Style.space(22), activityTitle.implicitHeight + Style.space(6))
-          color: activityMouse.containsMouse && row.hasDetails ? Style.hoverFillFor(Commons.Color.foreground, Commons.Color.accent) : "transparent"
+          height: Math.max(22, activityTitle.implicitHeight + Theme.spacingXS)
+          color: activityMouse.containsMouse && row.hasDetails ? Theme.surfaceContainerHighest : "transparent"
           MouseArea {
             id: activityMouse
             objectName: "activityHit"
@@ -70,33 +69,33 @@ Column {
           }
           Text {
             id: activityIcon
-            width: Style.space(22)
+            width: 22
             anchors.verticalCenter: parent.verticalCenter
             text: root.iconFor(row.modelData)
             textFormat: Text.PlainText
             color: root.iconColorFor(row.modelData)
             font.family: "JetBrainsMono Nerd Font"
-            font.pixelSize: Style.font.caption + 2
+            font.pixelSize: Theme.fontSizeSmall + 2
           }
           Text {
             id: activityTitle
             anchors.left: activityIcon.right; anchors.right: status.left
-            anchors.rightMargin: Style.space(8); anchors.verticalCenter: parent.verticalCenter
+            anchors.rightMargin: Theme.spacingS; anchors.verticalCenter: parent.verticalCenter
             text: root.titleFor(row.modelData) + (row.hasDetails ? (row.detailsOpen ? "  󰅀" : "  󰅂") : "")
             textFormat: Text.PlainText
             elide: Text.ElideRight
             color: root.muted
-            font.family: Style.font.family
-            font.pixelSize: Style.font.caption
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
           }
           Text {
             id: status
-            anchors.right: parent.right; anchors.rightMargin: Style.space(6)
+            anchors.right: parent.right; anchors.rightMargin: Theme.spacingXS
             anchors.verticalCenter: parent.verticalCenter
             text: root.statusFor(row.modelData)
             color: root.statusColorFor(row.modelData)
-            font.family: Style.font.family
-            font.pixelSize: Style.font.caption
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
           }
         }
         Loader {
@@ -122,7 +121,7 @@ Column {
           wrapMode: TextEdit.Wrap
           color: root.muted
           font.family: "JetBrainsMono Nerd Font"
-          font.pixelSize: Style.font.caption
+          font.pixelSize: Theme.fontSizeSmall
         }
         TextEdit {
           objectName: "activityOutput"
@@ -135,7 +134,7 @@ Column {
           wrapMode: TextEdit.Wrap
           color: root.muted
           font.family: "JetBrainsMono Nerd Font"
-          font.pixelSize: Style.font.caption
+          font.pixelSize: Theme.fontSizeSmall
         }
       }
     }

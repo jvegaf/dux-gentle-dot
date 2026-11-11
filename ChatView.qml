@@ -1,17 +1,16 @@
 import QtQuick
 import QtQuick.Controls
-import qs.Commons
-import qs.Commons as Commons
-
+import qs.Common
+import qs.Common
 // The conversation list. Follows new content while the user is at the bottom;
 // scrolling up pins the view until the user scrolls back down.
 ListView {
   id: view
 
-  property color foreground: Commons.Color.foreground
-  property color accent: Commons.Color.accent
-  property color urgent: Commons.Color.urgent
-  property string fontFamily: Style.font.family
+  property color foreground: Theme.surfaceText
+  property color accent: Theme.primary
+  property color urgent: Theme.error
+  property string fontFamily: Theme.fontFamily
   property bool followEnd: true
   property var client: null
   readonly property bool hasAsks: client !== null && client.pendingAsks.length > 0
@@ -40,7 +39,7 @@ ListView {
   }
 
   clip: true
-  spacing: Style.space(12)
+  spacing: Theme.spacingM
   boundsBehavior: Flickable.StopAtBounds
   // Mouse drags select text in the bubbles; the wheel and the scroll bar scroll.
   acceptedButtons: Qt.NoButton
@@ -56,7 +55,7 @@ ListView {
     property alias cards: askCards
     readonly property Item firstFocusTarget: askCards.count > 0 && askCards.itemAt(0) ? askCards.itemAt(0).focusTarget : null
     width: view.width
-    spacing: Style.space(12)
+    spacing: Theme.spacingM
     Repeater {
       id: askCards
       model: view.client ? view.client.askCards : null

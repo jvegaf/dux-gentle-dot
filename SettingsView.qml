@@ -1,8 +1,8 @@
 import QtQuick
 import Quickshell.Io
-import qs.Commons
+import qs.Common
 import qs.Modules.Plugins
-import qs.Ui
+
 import "privacy.mjs" as Privacy
 
 PluginSettings {
@@ -10,9 +10,9 @@ PluginSettings {
   pluginId: "gentle-dot"
 
   required property var client
-  property color foreground: Color.foreground
-  property color urgent: Color.urgent
-  property string fontFamily: Style.font.family
+  property color foreground: Theme.surfaceText
+  property color urgent: Theme.error
+  property string fontFamily: Theme.fontFamily
   // While connection details are hidden the host, port and custom URL fields are read-only
   // copies that show the mask; the real fields (and typing into them) come back with the eye.
   readonly property bool masked: !client || client.privacyMasked
@@ -261,7 +261,7 @@ PluginSettings {
   component Label: Text {
     color: root.foreground
     font.family: root.fontFamily
-    font.pixelSize: Style.font.caption
+    font.pixelSize: Theme.fontSizeSmall
     wrapMode: Text.Wrap
     textFormat: Text.PlainText
   }
@@ -290,7 +290,7 @@ PluginSettings {
     Column {
       id: form
       width: parent.width
-      spacing: Style.space(8)
+      spacing: Theme.spacingS
       enabled: !root.working
 
       Label { text: "Notifications"; font.bold: true }
@@ -309,7 +309,7 @@ PluginSettings {
       Label { width: parent.width; text: "A system sound for each notification. Omarchy's Do Not Disturb silences it." }
       Label { text: "Appearance"; font.bold: true }
       Row {
-        spacing: Style.space(8)
+        spacing: Theme.spacingS
         Repeater {
           model: [1, 0.95, 0.9, 0.85, 0.8]
           Button {
@@ -322,7 +322,7 @@ PluginSettings {
       }
       Label { width: parent.width; text: "Panel background opacity, like a terminal's background-opacity. Text and bubbles stay opaque." }
       Row {
-        spacing: Style.space(8)
+        spacing: Theme.spacingS
         Label { anchors.verticalCenter: parent.verticalCenter; text: "Avatar sleeps after" }
         Repeater {
           model: [0, 15, 30, 60]
@@ -378,7 +378,7 @@ PluginSettings {
         }
       }
       Row {
-        spacing: Style.space(8)
+        spacing: Theme.spacingS
         Button {
           objectName: "enableVoice"
           text: root.client.voice.setupFailed ? "Retry" : "Enable voice"
@@ -412,14 +412,14 @@ PluginSettings {
       Rectangle {
         visible: root.client.voice.modelBusy || root.client.voice.setupStep === "model"
         width: parent.width
-        height: Style.space(4)
+        height: Theme.spacingXS
         color: Qt.darker(root.foreground, 2)
         Rectangle {
           height: parent.height
           // Bound before the shell injects the client, and total is 0 until the download reports it.
           width: root.client && root.client.voice && root.client.voice.total > 0
             ? parent.width * Math.min(1, root.client.voice.received / root.client.voice.total) : 0
-          color: Color.accent
+          color: Theme.primary
         }
       }
       Button {
@@ -449,7 +449,7 @@ PluginSettings {
         color: root.shortcutFailed ? root.urgent : root.foreground
       }
       Row {
-        spacing: Style.space(8)
+        spacing: Theme.spacingS
         Label { anchors.verticalCenter: parent.verticalCenter; text: "Connection"; font.bold: true }
         PanelActionButton {
           objectName: "privacyToggle"
@@ -469,7 +469,7 @@ PluginSettings {
       }
 
       Row {
-        spacing: Style.space(8)
+        spacing: Theme.spacingS
         Button {
           text: root.remoteMode ? "This computer" : "● This computer"
           bordered: true
@@ -484,13 +484,13 @@ PluginSettings {
       // Remote-only fields; "This computer" needs nothing else.
       Column {
         width: parent.width
-        spacing: Style.space(8)
+        spacing: Theme.spacingS
         visible: root.remoteMode
 
         Label { width: parent.width; text: "Remote device · IP address or DNS name" }
         Row {
           visible: root.client.tailnet.available
-          spacing: Style.space(8)
+          spacing: Theme.spacingS
           Label { anchors.verticalCenter: parent.verticalCenter; text: "Tailnet devices" }
           Button { text: root.client.tailnet.loading ? "Refreshing…" : "Refresh"; onClicked: root.client.tailnet.refresh() }
         }
@@ -498,20 +498,20 @@ PluginSettings {
           objectName: "peerList"
           visible: root.client.tailnet.available
           width: parent.width
-          height: Math.min(contentHeight, Style.space(125))
+          height: Math.min(contentHeight, 125)
           clip: true
-          spacing: Style.space(4)
+          spacing: Theme.spacingXS
           model: root.client.tailnet.peers
           delegate: Item {
             id: peer
             required property var modelData
             readonly property string address: modelData.dnsName || modelData.ip
             width: ListView.view.width
-            height: peerText.implicitHeight + Style.space(6)
+            height: peerText.implicitHeight + Theme.spacingXS
 
             Rectangle {
               anchors.fill: parent
-              radius: Style.space(4)
+              radius: Theme.spacingXS
               color: peerArea.containsMouse || root.host === peer.address
                 ? Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.08) : "transparent"
             }
@@ -519,11 +519,11 @@ PluginSettings {
               id: peerText
               anchors.left: parent.left
               anchors.right: parent.right
-              anchors.leftMargin: Style.space(6)
+              anchors.leftMargin: Theme.spacingXS
               anchors.verticalCenter: parent.verticalCenter
               color: peer.modelData.online ? root.foreground : Qt.darker(root.foreground, 1.6)
               font.family: root.fontFamily
-              font.pixelSize: Style.font.caption
+              font.pixelSize: Theme.fontSizeSmall
               elide: Text.ElideRight
               textFormat: Text.PlainText
               // OS and online state stay visible so a device can still be chosen while masked.
@@ -573,7 +573,7 @@ PluginSettings {
       Field { objectName: "resultField"; text: root.masked ? Privacy.maskUrl(root.candidateUrl) : root.candidateUrl; readOnly: true; selectByMouse: true }
       Label { width: parent.width; visible: root.validation !== ""; text: root.validation; color: root.urgent }
       Row {
-        spacing: Style.space(8)
+        spacing: Theme.spacingS
         Button { text: "Test connection"; bordered: true; enabled: !root.validation && root.client.testState !== "testing"; onClicked: root.apply(true) }
         Button { text: "Save & connect"; bordered: true; enabled: !root.validation; onClicked: root.apply(false) }
         // A passing test does not switch the live connection by itself; offer it right here.
@@ -588,13 +588,13 @@ PluginSettings {
         width: parent.width
         visible: text !== ""
         text: root.working ? "Saving token…" : root.shown(root.feedback)
-        color: root.failed ? root.urgent : Color.accent
+        color: root.failed ? root.urgent : Theme.primary
       }
       Label {
         width: parent.width
         visible: text !== ""
         text: root.shown(root.client.testMessage)
-        color: root.client.testState === "failed" ? root.urgent : root.client.testState === "ok" ? Color.accent : Qt.darker(root.foreground, 1.4)
+        color: root.client.testState === "failed" ? root.urgent : root.client.testState === "ok" ? Theme.primary : Qt.darker(root.foreground, 1.4)
       }
       Label { width: parent.width; visible: root.remoteMode; text: "On the Mac (select and copy):" }
       TextEdit {
@@ -605,7 +605,7 @@ PluginSettings {
         wrapMode: TextEdit.Wrap
         color: root.foreground
         font.family: root.fontFamily
-        font.pixelSize: Style.font.caption
+        font.pixelSize: Theme.fontSizeSmall
         textFormat: TextEdit.PlainText
         text: "tailscale serve --bg 4317\npbcopy < ~/.gentle-dot/token"
       }

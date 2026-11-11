@@ -1,17 +1,16 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
-import qs.Commons
-import qs.Commons as Commons
-import qs.Ui as Ui
+import qs.Common
+import qs.Common
 
 // One shared draft, even when the same conversation has several UI surfaces.
 FocusScope {
   id: root
   required property var client
-  property color foreground: Commons.Color.foreground
-  property color accent: Commons.Color.accent
-  property color urgent: Commons.Color.urgent
+  property color foreground: Theme.surfaceText
+  property color accent: Theme.primary
+  property color urgent: Theme.error
   // The assistant is answering: show Stop next to the mic.
   property bool busy: false
   readonly property var voice: client ? client.voice : null
@@ -22,7 +21,7 @@ FocusScope {
   readonly property var attachments: client ? client.attachments : []
   readonly property bool uploading: client ? client.uploading : false
   // Chips and upload status sit above the field and add to its height.
-  readonly property real trayHeight: tray.visible ? tray.implicitHeight + Style.space(6) : 0
+  readonly property real trayHeight: tray.visible ? tray.implicitHeight + Theme.spacingXS : 0
   readonly property real maximumHeight: trayHeight + metrics.height * 8 + input.topPadding + input.bottomPadding
   // The native file dialog is open (Panel pins the popup meanwhile so the dialog stays usable).
   readonly property bool pickerOpen: picker.visible
@@ -37,8 +36,8 @@ FocusScope {
   // (S17.1): it cuts the border with the panel's own background (popups.background at
   // avatarAlpha) and never changes the composer's height.
   property bool statusVisible: true
-  property color statusBackground: Qt.rgba(Commons.Color.popups.background.r, Commons.Color.popups.background.g,
-    Commons.Color.popups.background.b, root.avatarAlpha)
+  property color statusBackground: Qt.rgba(Theme.surfaceContainerHigh.r, Theme.surfaceContainerHigh.g,
+    Theme.surfaceContainerHigh.b, root.avatarAlpha)
   readonly property alias statusItem: legendText
   readonly property alias statusDot: legendDot
   readonly property alias statusActions: actions
@@ -77,11 +76,11 @@ FocusScope {
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: parent.top
-    spacing: Style.space(4)
+    spacing: Theme.spacingXS
 
     Flow {
       width: parent.width
-      spacing: Style.space(6)
+      spacing: Theme.spacingXS
       Repeater {
         model: root.attachments
         AttachmentChip {
@@ -105,7 +104,7 @@ FocusScope {
       elide: Text.ElideRight
       textFormat: Text.PlainText
       font.family: root.font.family
-      font.pixelSize: Style.font.caption
+      font.pixelSize: Theme.fontSizeSmall
     }
   }
 
@@ -115,7 +114,7 @@ FocusScope {
     client: root.client
     active: root.avatarActive && visible
     backgroundAlpha: root.avatarAlpha
-    radius: Style.cornerRadius
+    radius: Theme.cornerRadius
     eyeColor: root.foreground
     anchors.left: parent.left
     anchors.bottom: parent.bottom
@@ -132,16 +131,16 @@ FocusScope {
   Item {
     id: field
     anchors.left: parent.left
-    anchors.leftMargin: avatar.visible ? avatar.width + Style.space(6) : 0
+    anchors.leftMargin: avatar.visible ? avatar.width + Theme.spacingXS : 0
     anchors.right: parent.right
     anchors.bottom: parent.bottom
     height: Math.min(metrics.height * 8, Math.max(metrics.height, input.contentHeight)) + input.topPadding + input.bottomPadding
 
-    Ui.BorderSurface {
+    BorderSurface {
       anchors.fill: parent
-      color: Style.controlFill(root.activeFocus, input.hovered, root.foreground, root.accent)
+      color: Theme.surfaceContainerHigh
       borderSpec: root.borderSpec
-      radius: Style.cornerRadius
+      radius: Theme.cornerRadius
     }
     ScrollView {
       anchors.fill: parent
@@ -159,17 +158,17 @@ FocusScope {
         wrapMode: TextEdit.Wrap
         selectByMouse: true
         color: root.foreground
-        selectionColor: Style.selectionFillFor(root.foreground, root.accent)
+        selectionColor: Theme.primaryContainer
         selectedTextColor: root.foreground
         placeholderText: root.placeholderText
         placeholderTextColor: Qt.darker(root.foreground, 1.6)
-        font.family: Style.font.family
-        font.pixelSize: Style.font.body
-        leftPadding: Style.spacing.controlPaddingX + Border.left(root.borderSpec)
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeMedium
+        leftPadding: Theme.spacingM + 0
         // Leave room for the in-field actions so text never runs under them.
-        rightPadding: Style.spacing.controlPaddingX + Border.right(root.borderSpec) + actions.width + Style.space(6)
-        topPadding: Style.spacing.inputPaddingY + Border.top(root.borderSpec)
-        bottomPadding: Style.spacing.inputPaddingY + Border.bottom(root.borderSpec)
+        rightPadding: Theme.spacingM + 0 + actions.width + Theme.spacingXS
+        topPadding: Theme.spacingS + 0
+        bottomPadding: Theme.spacingS + 0
         background: null
         Keys.onEscapePressed: function(event) { root.escapePressed(); event.accepted = true }
         Keys.onTabPressed: function(event) { root.tabPressed(1); event.accepted = true }
@@ -192,13 +191,13 @@ FocusScope {
     Row {
       id: actions
       z: 1
-      spacing: Style.space(2)
+      spacing: Theme.spacingXXS
       anchors.right: parent.right
       anchors.bottom: parent.bottom
-      anchors.rightMargin: Style.space(4) + Border.right(root.borderSpec)
-      anchors.bottomMargin: Math.max(Style.space(2), (metrics.height + input.topPadding + input.bottomPadding - height) / 2)
+      anchors.rightMargin: Theme.spacingXS + 0
+      anchors.bottomMargin: Math.max(Theme.spacingXXS, (metrics.height + input.topPadding + input.bottomPadding - height) / 2)
 
-      Ui.PanelActionButton {
+      PanelActionButton {
         objectName: "attachButton"
         iconText: "󰏢"
         tooltipText: "Attach files"
@@ -207,7 +206,7 @@ FocusScope {
         onClicked: root.pickFiles()
       }
 
-      Ui.PanelActionButton {
+      PanelActionButton {
         visible: root.busy
         iconText: "󰙦"
         tooltipText: "Stop the answer"
@@ -216,7 +215,7 @@ FocusScope {
         onClicked: root.client.abort()
       }
 
-      Ui.PanelActionButton {
+      PanelActionButton {
         objectName: "micButton"
         readonly property string voiceState: root.voice ? root.voice.state : "idle"
         iconText: voiceState === "recording" ? "󰓛" : (voiceState === "idle" ? "󰍬" : "󰔟")
@@ -239,17 +238,17 @@ FocusScope {
     readonly property string tone: root.client ? root.client.statusTone : "dim"
     readonly property color toneColor: tone === "urgent" ? root.urgent
       : (tone === "accent" ? root.accent : Qt.darker(root.foreground, 1.4))
-    readonly property real padding: Style.space(4)
+    readonly property real padding: Theme.spacingXS
     visible: root.statusVisible && target !== ""
     z: 2
     // Right edge just before the in-field icons (never over attach/mic); longer text grows left.
-    readonly property real rightEdge: field.x + actions.x - Style.space(4)
+    readonly property real rightEdge: field.x + actions.x - Theme.spacingXS
     x: rightEdge - width
-    y: field.y + Border.top(root.borderSpec) / 2 - height / 2
+    y: field.y + 0 / 2 - height / 2
     height: legendText.implicitHeight
     // Elided rather than reaching the avatar, whatever the field's width.
     readonly property real natural: legendText.implicitWidth + (legendDot.visible ? legendDot.width + legendRow.spacing : 0)
-    width: Math.max(0, Math.min(natural + padding * 2, rightEdge - field.x - Style.space(10)))
+    width: Math.max(0, Math.min(natural + padding * 2, rightEdge - field.x - Theme.spacingS))
 
     // Fade out, swap the words, fade back in.
     onTargetChanged: swap.restart()
@@ -271,14 +270,14 @@ FocusScope {
       x: legend.padding
       width: legend.width - legend.padding * 2
       height: parent.height
-      spacing: Style.space(4)
+      spacing: Theme.spacingXS
       clip: true
 
       // A small dot that pulses while the assistant is busy.
       Rectangle {
         id: legendDot
         visible: legend.tone === "accent"
-        width: Style.space(5)
+        width: 5
         height: width
         radius: width / 2
         anchors.verticalCenter: parent.verticalCenter
@@ -302,7 +301,7 @@ FocusScope {
         elide: Text.ElideRight
         textFormat: Text.PlainText
         font.family: root.font.family
-        font.pixelSize: Style.font.caption
+        font.pixelSize: Theme.fontSizeSmall
       }
     }
   }

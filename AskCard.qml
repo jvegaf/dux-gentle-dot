@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls as Controls
-import qs.Commons
-import qs.Ui
+import qs.Common
+
 import "bridge/attachments.mjs" as Attachments
 
 // A pending protocol Ask. All responses use the service's validated answer path;
@@ -11,9 +11,9 @@ FocusScope {
 
   required property var ask
   property var client: null
-  property color foreground: Color.foreground
-  property color urgent: Color.urgent
-  property string fontFamily: Style.font.family
+  property color foreground: Theme.surfaceText
+  property color urgent: Theme.error
+  property string fontFamily: Theme.fontFamily
   readonly property bool appOnly: ask.method === "app" || ask.method === "pin"
   readonly property Item focusTarget: appOnly ? null
     : ask.method === "input" ? input
@@ -22,7 +22,7 @@ FocusScope {
     : options.count > 0 ? options.itemAt(0) : cancel
   property string answerError: ""
 
-  implicitHeight: contents.implicitHeight + Style.space(24)
+  implicitHeight: contents.implicitHeight + Theme.spacingL
 
   // The ask comes from the daemon: links open only when they are web links (http, https), never
   // file:// or other schemes that start local applications (S22.1).
@@ -40,7 +40,7 @@ FocusScope {
 
   Rectangle {
     anchors.fill: parent
-    radius: Style.cornerRadius
+    radius: Theme.cornerRadius
     color: Qt.rgba(card.foreground.r, card.foreground.g, card.foreground.b, 0.06)
     border.color: card.urgent
     border.width: 1
@@ -48,10 +48,10 @@ FocusScope {
 
   Column {
     id: contents
-    x: Style.space(12)
-    y: Style.space(12)
-    width: card.width - Style.space(24)
-    spacing: Style.space(8)
+    x: Theme.spacingM
+    y: Theme.spacingM
+    width: card.width - Theme.spacingL
+    spacing: Theme.spacingS
 
     Text {
       width: parent.width
@@ -60,7 +60,7 @@ FocusScope {
       wrapMode: Text.Wrap
       color: card.foreground
       font.family: card.fontFamily
-      font.pixelSize: Style.font.body
+      font.pixelSize: Theme.fontSizeMedium
       font.bold: true
     }
 
@@ -76,7 +76,7 @@ FocusScope {
       wrapMode: TextEdit.Wrap
       color: card.foreground
       font.family: card.fontFamily
-      font.pixelSize: Style.font.body
+      font.pixelSize: Theme.fontSizeMedium
       onLinkActivated: function(link) { card.openLink(link) }
     }
 
@@ -87,13 +87,13 @@ FocusScope {
       wrapMode: Text.Wrap
       color: card.urgent
       font.family: card.fontFamily
-      font.pixelSize: Style.font.body
+      font.pixelSize: Theme.fontSizeMedium
     }
 
     Column {
       visible: card.ask.method === "select"
       width: parent.width
-      spacing: Style.space(6)
+      spacing: Theme.spacingXS
       Repeater {
         id: options
         model: card.ask.method === "select" ? (card.ask.options || []) : []
@@ -112,7 +112,7 @@ FocusScope {
 
     Row {
       visible: card.ask.method === "confirm"
-      spacing: Style.space(8)
+      spacing: Theme.spacingS
       Button {
         id: yes
         text: "Yes"
@@ -146,7 +146,7 @@ FocusScope {
     Controls.ScrollView {
       visible: card.ask.method === "editor"
       width: parent.width
-      height: Style.space(130)
+      height: 130
       clip: true
       Controls.TextArea {
         id: editor
@@ -157,18 +157,18 @@ FocusScope {
         color: card.foreground
         placeholderTextColor: Qt.darker(card.foreground, 1.4)
         font.family: card.fontFamily
-        font.pixelSize: Style.font.body
+        font.pixelSize: Theme.fontSizeMedium
         background: Rectangle {
           color: "transparent"
           border.color: editor.activeFocus ? card.urgent : Qt.darker(card.foreground, 1.4)
-          radius: Style.cornerRadius
+          radius: Theme.cornerRadius
         }
       }
     }
 
     Row {
       visible: !card.appOnly
-      spacing: Style.space(8)
+      spacing: Theme.spacingS
       Button {
         visible: card.ask.method === "input" || card.ask.method === "editor"
         text: "Submit"
@@ -197,7 +197,7 @@ FocusScope {
       wrapMode: Text.Wrap
       color: card.urgent
       font.family: card.fontFamily
-      font.pixelSize: Style.font.caption
+      font.pixelSize: Theme.fontSizeSmall
     }
   }
 }

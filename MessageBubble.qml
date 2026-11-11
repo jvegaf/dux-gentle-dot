@@ -1,8 +1,8 @@
 import QtQuick
 import Quickshell.Io
-import qs.Commons
-import qs.Commons as Commons
-import qs.Ui as Ui
+import qs.Common
+import qs.Common
+
 import "bridge/time-format.mjs" as TimeFormat
 import "bridge/attachments.mjs" as Attachments
 import "privacy.mjs" as Privacy
@@ -74,10 +74,10 @@ Item {
     return result
   }
 
-  property color foreground: Commons.Color.foreground
-  property color accent: Commons.Color.accent
-  property color urgent: Commons.Color.urgent
-  property string fontFamily: Style.font.family
+  property color foreground: Theme.surfaceText
+  property color accent: Theme.primary
+  property color urgent: Theme.error
+  property string fontFamily: Theme.fontFamily
 
   readonly property bool fromUser: role === "user"
   readonly property color dim: Qt.darker(foreground, 1.4)
@@ -92,7 +92,7 @@ Item {
   // The time sits outside the cards (S14.11): left of the user's card, right of the reply card.
   // The gutter is always reserved, sized for the widest label ("Oct 26, 2025"), so a message
   // keeps its width whether or not it has a time (no jump when it gets stamped).
-  readonly property real timeGap: Style.space(6)
+  readonly property real timeGap: Theme.spacingXS
   readonly property real timeGutter: Math.ceil(widestTime.width) + timeGap
   readonly property real userMaxWidth: Math.max(0, Math.min(width * 0.85, width - timeGutter))
   readonly property real replyWidth: Math.max(0, width - timeGutter)
@@ -113,7 +113,7 @@ Item {
   }
   readonly property real lastLineHeight: lastLineRect.height > 0 ? lastLineRect.height : footerRow.height
   readonly property bool footerInline: footerShown && lastProse !== null && footer === ""
-    && lastLineRect.x + Style.space(12) + footerRow.implicitWidth <= assistantColumn.width
+    && lastLineRect.x + Theme.spacingM + footerRow.implicitWidth <= assistantColumn.width
   readonly property bool footerOwnRow: footerShown && !footerInline
   readonly property string footer: {
     if (fromUser) return ""
@@ -198,14 +198,14 @@ Item {
     color: Qt.rgba(bubble.foreground.r, bubble.foreground.g, bubble.foreground.b, 0.55)
     textFormat: Text.PlainText
     font.family: bubble.fontFamily
-    font.pixelSize: Style.font.caption - 1
+    font.pixelSize: Theme.fontSizeSmall - 1
   }
   // An upper bound of every label: "Mmm" is at least as wide as any month abbreviation.
   TextMetrics {
     id: widestTime
     text: "Mmm 00, 0000"
     font.family: bubble.fontFamily
-    font.pixelSize: Style.font.caption - 1
+    font.pixelSize: Theme.fontSizeSmall - 1
   }
 
   // A local image: a low-quality (240 px) preview that opens the viewer on click.
@@ -218,9 +218,9 @@ Item {
     property alias imageName: picture.objectName
     property alias hitName: hit.objectName
     readonly property bool failed: picture.status === Image.Error
-    width: picture.status === Image.Ready ? picture.paintedWidth : Style.space(120)
-    height: picture.status === Image.Ready ? picture.paintedHeight : Style.space(80)
-    radius: Style.cornerRadius
+    width: picture.status === Image.Ready ? picture.paintedWidth : 120
+    height: picture.status === Image.Ready ? picture.paintedHeight : 80
+    radius: Theme.cornerRadius
     color: Qt.rgba(bubble.foreground.r, bubble.foreground.g, bubble.foreground.b, 0.06)
     clip: true
     Image {
@@ -247,7 +247,7 @@ Item {
     id: userStack
     visible: bubble.fromUser
     width: bubble.width
-    spacing: Style.space(3)
+    spacing: 3
 
     Flow {
       id: userAttachments
@@ -256,7 +256,7 @@ Item {
       anchors.right: parent.right
       width: Math.min(bubble.userMaxWidth, implicitWidth)
       layoutDirection: Qt.RightToLeft
-      spacing: Style.space(6)
+      spacing: Theme.spacingXS
       Repeater {
         model: bubble.fromUser ? bubble.attachmentList : []
         Loader {
@@ -282,11 +282,11 @@ Item {
           Component {
             id: chip
             Row {
-              spacing: Style.space(2)
+              spacing: Theme.spacingXXS
               layoutDirection: Qt.RightToLeft
               // Files that are not fetched for a thumbnail open on demand: the local copy, or the
               // daemon's (S14.7) once the bridge has downloaded it.
-              Ui.PanelActionButton {
+              PanelActionButton {
                 objectName: "attachmentOpen"
                 visible: (!Attachments.autoFetched(modelData.mime) || !!modelData.deferred) && !modelData.loading
                   && (!!modelData.path ? !!modelData.openable : !!modelData.uploadId)
@@ -295,10 +295,10 @@ Item {
                 tooltipText: (modelData.deferred ? "Load preview of " : "Open ") + modelData.name
                 foreground: bubble.dim
                 fontFamily: "JetBrainsMono Nerd Font"
-                fontSize: Style.font.caption + 2
+                fontSize: Theme.fontSizeSmall + 2
                 onClicked: bubble.openFile(modelData)
               }
-              Ui.PanelActionButton {
+              PanelActionButton {
                 objectName: "attachmentCopyPath"
                 visible: !!modelData.path && !modelData.openable && !Attachments.autoFetched(modelData.mime)
                 anchors.verticalCenter: parent.verticalCenter
@@ -306,7 +306,7 @@ Item {
                 tooltipText: "Copy the path of " + modelData.name + " (saved, not opened)"
                 foreground: bubble.dim
                 fontFamily: "JetBrainsMono Nerd Font"
-                fontSize: Style.font.caption + 2
+                fontSize: Theme.fontSizeSmall + 2
                 onClicked: bubble.copyPath(modelData.path)
               }
               AttachmentChip {
@@ -333,28 +333,28 @@ Item {
       objectName: "userCard"
       visible: bubble.text !== ""
       anchors.right: parent.right
-      width: Math.min(bubble.userMaxWidth, userText.implicitWidth + Style.space(20))
-      height: userText.implicitHeight + Style.space(12)
-      radius: Style.cornerRadius
+      width: Math.min(bubble.userMaxWidth, userText.implicitWidth + 20)
+      height: userText.implicitHeight + Theme.spacingM
+      radius: Theme.cornerRadius
       color: Qt.rgba(bubble.foreground.r, bubble.foreground.g, bubble.foreground.b, 0.08)
 
       TextEdit {
         id: userText
         objectName: "userText"
         anchors.fill: parent
-        anchors.leftMargin: Style.space(10)
-        anchors.rightMargin: Style.space(10)
-        anchors.topMargin: Style.space(6)
-        anchors.bottomMargin: Style.space(6)
+        anchors.leftMargin: Theme.spacingS
+        anchors.rightMargin: Theme.spacingS
+        anchors.topMargin: Theme.spacingXS
+        anchors.bottomMargin: Theme.spacingXS
         readOnly: true
         selectByMouse: true
         textFormat: TextEdit.PlainText
         wrapMode: TextEdit.Wrap
         text: bubble.fromUser ? bubble.text : ""
         color: bubble.foreground
-        selectionColor: Style.selectionFillFor(bubble.foreground, bubble.accent)
+        selectionColor: Theme.primaryContainer
         font.family: bubble.fontFamily
-        font.pixelSize: Style.font.body
+        font.pixelSize: Theme.fontSizeMedium
       }
     }
   }
@@ -372,7 +372,7 @@ Item {
     id: assistantStack
     visible: !bubble.fromUser
     width: bubble.width
-    spacing: Style.space(8)
+    spacing: Theme.spacingS
     ActivityGroup {
       objectName: "messageActivities"
       width: bubble.replyWidth
@@ -388,8 +388,8 @@ Item {
       onVisibleChanged: if (visible) Qt.callLater(function() { assistantColumn.forceLayout(); footerRow.forceLayout() })
       width: bubble.replyWidth
       // Room for the footer below the text when it cannot share the last line.
-      height: assistantColumn.implicitHeight + Style.space(20) + (bubble.footerOwnRow ? footerRow.height + Style.space(6) : 0)
-      radius: Style.cornerRadius
+      height: assistantColumn.implicitHeight + 20 + (bubble.footerOwnRow ? footerRow.height + Theme.spacingXS : 0)
+      radius: Theme.cornerRadius
       // Square on the rail side, like the action lines above it.
       topLeftRadius: 0
       bottomLeftRadius: 0
@@ -402,9 +402,9 @@ Item {
       }
       Column {
         id: assistantColumn
-        x: Style.space(10); y: Style.space(10)
-        width: parent.width - Style.space(20)
-        spacing: Style.space(6)
+        x: Theme.spacingS; y: Theme.spacingS
+        width: parent.width - 20
+        spacing: Theme.spacingXS
         Collapsible {
           width: parent.width
           visible: bubble.reasoning !== ""
@@ -454,22 +454,22 @@ Item {
                   id: placeholder
                   objectName: "imagePlaceholder"
                   visible: !remoteImage.allowed
-                  width: Math.min(assistantColumn.width, placeholderText.implicitWidth + Style.space(20))
-                  height: placeholderText.implicitHeight + Style.space(12)
-                  radius: Style.cornerRadius
+                  width: Math.min(assistantColumn.width, placeholderText.implicitWidth + 20)
+                  height: placeholderText.implicitHeight + Theme.spacingM
+                  radius: Theme.cornerRadius
                   color: placeholderHit.containsMouse ? Qt.rgba(bubble.foreground.r, bubble.foreground.g, bubble.foreground.b, 0.12)
                     : Qt.rgba(bubble.foreground.r, bubble.foreground.g, bubble.foreground.b, 0.06)
                   Text {
                     id: placeholderText
                     objectName: "imagePlaceholderText"
                     anchors.centerIn: parent
-                    width: Math.min(implicitWidth, assistantColumn.width - Style.space(20))
+                    width: Math.min(implicitWidth, assistantColumn.width - 20)
                     text: "Load image from " + (bubble.privacyMasked ? Privacy.maskValue(bubble.imageHost(modelData.url)) : bubble.imageHost(modelData.url))
                     textFormat: Text.PlainText
                     elide: Text.ElideRight
                     color: bubble.dim
                     font.family: bubble.fontFamily
-                    font.pixelSize: Style.font.caption
+                    font.pixelSize: Theme.fontSizeSmall
                   }
                   MouseArea {
                     id: placeholderHit
@@ -497,7 +497,7 @@ Item {
           wrapMode: Text.Wrap
           textFormat: Text.PlainText
           font.family: bubble.fontFamily
-          font.pixelSize: Style.font.caption
+          font.pixelSize: Theme.fontSizeSmall
         }
       }
       // Footer: the copy icon, on the last text line when it fits there, else on its own row (the
@@ -505,12 +505,12 @@ Item {
       Row {
         id: footerRow
         visible: bubble.footerShown
-        spacing: Style.space(6)
+        spacing: Theme.spacingXS
         anchors.right: assistantColumn.right
         y: bubble.footerInline
           ? assistantColumn.y + assistantColumn.implicitHeight - bubble.lastLineHeight / 2 - height / 2
-          : assistantColumn.y + assistantColumn.implicitHeight + Style.space(6)
-        Ui.PanelActionButton {
+          : assistantColumn.y + assistantColumn.implicitHeight + Theme.spacingXS
+        PanelActionButton {
           id: copyAction
           objectName: "replyCopy"
           anchors.verticalCenter: parent.verticalCenter
@@ -522,7 +522,7 @@ Item {
           tooltipText: bubble.copyState === "copied" ? "Copied" : (bubble.copyState === "failed" ? "Copy failed" : "Copy reply")
           foreground: bubble.copyState === "failed" ? bubble.urgent : bubble.dim
           fontFamily: "JetBrainsMono Nerd Font"
-          fontSize: Style.font.caption + 2
+          fontSize: Theme.fontSizeSmall + 2
           onClicked: bubble.copyText()
         }
       }
