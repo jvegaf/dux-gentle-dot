@@ -24,8 +24,14 @@ From the plugin repository:
 
 ```sh
 ln -sfn "$PWD" ~/.config/dms/plugins/gentle-dot
-dms ipc call plugins reload gentle-dot
+
+# first-time discovery (if not already known to DMS)
+dms ipc call plugin-scan rescan gentle-dot
 dms ipc call plugins list
+
+# enable/reload (may also be done from DMS plugin settings)
+dms ipc call plugins enable gentle-dot
+dms ipc call plugins reload gentle-dot
 ```
 
 After code changes, reload again:
@@ -33,6 +39,8 @@ After code changes, reload again:
 ```sh
 dms ipc call plugins reload gentle-dot
 ```
+
+If `plugins enable`/`reload` reports failure, check DMS/Quickshell logs for QML/plugin load errors and confirm the plugin is enabled in DMS settings. This port is under runtime validation in DMS (see development notes).
 
 ## Usage
 
@@ -69,5 +77,6 @@ Note: on environments without the QtTest QML module or a usable display, QML har
 
 ## Development notes
 
-- This repository is a port in progress tracked in `odd/tasks/dux-port.md` (ODD task document).
-- `hypr/` integration from the Omarchy plugin is not ported; use DMS keybinds instead.
+- Port tracked in `odd/tasks/dux-port.md` (ODD task document). Tasks T1–T9 (scaffold split, DMS metadata/daemon wiring, widget/pills+popout, `pluginData` persistence, theme/widget sweep, DnD/state paths, IPC/keybind/Node messaging, README, dev symlink smoke test) are implemented on `main`.
+- Runtime status: symlink install and plugin discovery in DMS were smoke-tested; in the tested session the plugin remained `disabled` and `plugins enable`/`reload` failed, so DMS runtime debugging/validation is still needed.
+- `hypr/` integration from the Omarchy plugin is not ported; use DMS keybinds/IPCs instead (e.g. `dms ipc call gentle-dot.client openChat`).
