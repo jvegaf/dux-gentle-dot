@@ -9,8 +9,15 @@ Rectangle {
   property color foreground: Theme.surfaceText
   property color hoverColor: Theme.primary
   property string fontFamily: Theme.fontFamily
+  property real fontSize: Theme.fontSizeMedium
   property bool bordered: false
+  property bool focusable: false
   signal clicked()
+
+  focus: focusable
+  activeFocusOnTab: focusable
+  Keys.onReturnPressed: if (enabled) root.clicked()
+  Keys.onEnterPressed: if (enabled) root.clicked()
 
   implicitWidth: 28
   implicitHeight: 28
@@ -25,7 +32,7 @@ Rectangle {
     text: root.iconText
     color: mouse.containsMouse ? root.hoverColor : root.foreground
     font.family: root.fontFamily
-    font.pixelSize: Theme.fontSizeMedium
+    font.pixelSize: root.fontSize
     textFormat: Text.PlainText
   }
 

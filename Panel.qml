@@ -475,7 +475,7 @@ PluginComponent {
 
     Loader {
       id: stickyLoader
-      anchors.fill: stickyPanel.contentContainer
+      anchors.fill: parent
       active: stickyPanel.open
       sourceComponent: mainUiComponent
     }
@@ -492,7 +492,7 @@ PluginComponent {
 
     Loader {
       id: detachedLoader
-      anchors.fill: detachedWindow.contentContainer
+      anchors.fill: parent
       active: detachedWindow.open
       sourceComponent: mainUiComponent
     }

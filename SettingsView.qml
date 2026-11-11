@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Io
+import QtQuick.Controls as Controls
 import qs.Common
 import qs.Modules.Plugins
 
@@ -185,16 +186,20 @@ PluginSettings {
     wrapMode: Text.Wrap
     textFormat: Text.PlainText
   }
-  component Field: TextField {
+  component Field: Controls.TextField {
     width: parent.width
-    foreground: root.foreground
+    color: root.foreground
+    placeholderTextColor: Qt.darker(root.foreground, 1.4)
     font.family: root.fontFamily
+    property bool password: false
+    echoMode: password ? TextInput.Password : TextInput.Normal
     onTextEdited: { root.remoteMode = true; root.feedback = "" }
   }
   // Stands in for a Field while masked: read-only, so selecting or copying yields only the mask.
-  component MaskField: TextField {
+  component MaskField: Controls.TextField {
     width: parent.width
-    foreground: root.foreground
+    color: root.foreground
+    placeholderTextColor: Qt.darker(root.foreground, 1.4)
     font.family: root.fontFamily
     readOnly: true
   }

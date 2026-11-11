@@ -71,7 +71,7 @@ Item {
         text: "󰏢"
         color: root.accent
         font.family: root.fontFamily
-        font.pixelSize: Style.font.heading * 2
+        font.pixelSize: Theme.fontSizeDisplay
       }
       Text {
         objectName: "dropOverlayLabel"
@@ -80,7 +80,7 @@ Item {
         color: root.accent
         textFormat: Text.PlainText
         font.family: root.fontFamily
-        font.pixelSize: Style.font.heading
+        font.pixelSize: Theme.fontSizeLarge
         font.bold: true
       }
     }

@@ -11,14 +11,21 @@ Rectangle {
   property string fontFamily: Theme.fontFamily
   property bool bordered: false
   property bool flat: false
+  property bool focusable: false
   signal clicked()
+
+  focus: focusable
+  activeFocusOnTab: focusable
+  Keys.onReturnPressed: if (enabled) root.clicked()
+  Keys.onEnterPressed: if (enabled) root.clicked()
+  Keys.onSpacePressed: if (enabled) root.clicked()
 
   implicitWidth: label.implicitWidth + Theme.spacingL * 2
   implicitHeight: Math.max(32, label.implicitHeight + Theme.spacingS * 2)
   radius: Theme.cornerRadius
   color: flat ? "transparent" : (mouse.containsMouse ? hoverColor : background)
-  border.width: bordered || flat ? 1 : 0
-  border.color: bordered ? foreground : (flat ? Theme.outlineVariant : "transparent")
+  border.width: activeFocus ? 2 : (bordered || flat ? 1 : 0)
+  border.color: activeFocus ? Theme.primary : bordered ? foreground : (flat ? Theme.outlineVariant : "transparent")
   opacity: enabled ? 1 : 0.5
 
   Text {

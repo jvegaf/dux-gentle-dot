@@ -26,6 +26,7 @@ PanelWindow {
   readonly property real windowGap: Theme.spacingM * 2
   readonly property real edgeInset: barThickness + windowGap
   property alias contentContainer: contentHolder
+  default property alias content: contentHolder.data
 
   screen: anchorWindow ? anchorWindow.screen : null
   visible: open
@@ -56,7 +57,6 @@ PanelWindow {
     id: card
     anchors.fill: parent
     color: root.background
-    borderSpec: 0)
     padding: root.padding
     radius: Theme.cornerRadius
 

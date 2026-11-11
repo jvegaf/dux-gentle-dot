@@ -132,15 +132,26 @@ FocusScope {
       }
     }
 
-    TextField {
+    Controls.TextField {
       id: input
       visible: card.ask.method === "input"
       width: parent.width
-      foreground: card.foreground
+      color: card.foreground
+      placeholderTextColor: Qt.darker(card.foreground, 1.4)
+      selectionColor: Theme.primaryContainer
+      selectedTextColor: card.foreground
       font.family: card.fontFamily
+      font.pixelSize: Theme.fontSizeMedium
+      leftPadding: Theme.spacingS
+      rightPadding: Theme.spacingS
       text: String(card.ask.prefill || "")
       placeholderText: String(card.ask.placeholder || "")
       onAccepted: card.respond({value: text})
+      background: Rectangle {
+        color: "transparent"
+        border.color: input.activeFocus ? card.urgent : Qt.darker(card.foreground, 1.4)
+        radius: Theme.cornerRadius
+      }
     }
 
     Controls.ScrollView {

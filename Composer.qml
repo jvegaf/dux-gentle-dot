@@ -41,7 +41,6 @@ FocusScope {
   readonly property alias statusItem: legendText
   readonly property alias statusDot: legendDot
   readonly property alias statusActions: actions
-  readonly property var borderSpec: Border.controlSpec(activeFocus ? "focus" : (input.hovered ? "hover-cursor" : "normal"), foreground, accent)
   signal sent()
   signal escapePressed()
   signal tabPressed(int direction)
@@ -139,7 +138,6 @@ FocusScope {
     BorderSurface {
       anchors.fill: parent
       color: Theme.surfaceContainerHigh
-      borderSpec: root.borderSpec
       radius: Theme.cornerRadius
     }
     ScrollView {

@@ -12,6 +12,7 @@ FloatingWindow {
   property int initialWidth: 560
   property int initialHeight: 640
   property alias contentContainer: contentHolder
+  default property alias content: contentHolder.data
   property color background: Theme.surfaceContainerHigh
   signal dockRequested()
 

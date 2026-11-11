@@ -2,7 +2,7 @@
   "id": "gentle-dot",
   "name": "Gentle Dot",
   "description": "Native chat panel for Gentle Dot on Dux/DankMaterialShell.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "dux-gentle-dot",
   "license": "MIT",
   "type": "composite",
