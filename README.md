@@ -34,10 +34,18 @@ dms ipc call plugins enable gentle-dot
 dms ipc call plugins reload gentle-dot
 ```
 
-After code changes, reload again:
+After code changes to an existing file, reload again:
 
 ```sh
 dms ipc call plugins reload gentle-dot
+```
+
+Adding a **new** `.qml` file to the plugin does not take effect with `plugins reload`: Qt caches the compiled
+document per URL and the directory import is fixed for the life of the QML engine, so the old error keeps
+reporting the old line numbers. Restart the QML process instead:
+
+```sh
+systemctl --user reload dms
 ```
 
 If `plugins enable`/`reload` reports failure, check DMS/Quickshell logs for QML/plugin load errors and confirm the plugin is enabled in DMS settings. This port is under runtime validation in DMS (see development notes).
@@ -78,5 +86,13 @@ Note: on environments without the QtTest QML module or a usable display, QML har
 ## Development notes
 
 - Port tracked in `odd/tasks/dux-port.md` (ODD task document). Tasks T1–T9 (scaffold split, DMS metadata/daemon wiring, widget/pills+popout, `pluginData` persistence, theme/widget sweep, DnD/state paths, IPC/keybind/Node messaging, README, dev symlink smoke test) are implemented on `main`.
-- Runtime status: symlink install and plugin discovery in DMS were smoke-tested; in the tested session the plugin remained `disabled` and `plugins enable`/`reload` failed, so DMS runtime debugging/validation is still needed.
+- Runtime status (v0.1.1): the plugin loads under DMS and the widget opens. Verified on this host with
+  `plugin-scan status gentle-dot` → `loaded composite`, `widget toggle gentle-dot`, and
+  `gentle-dot.client openChat` / `openSettings` switching views with no QML errors in `journalctl --user -u dms`.
+  Still unexercised: detach to a floating window, sticky/pinned mode, image viewer, voice dictation, and real
+  focus order for `Button`/`PanelActionButton`.
+- Keep the DMS plugin directory identical to this repo. On some hosts it is a **clone**, not a symlink, so a fix
+  has to be copied over (or the directory replaced by the symlink above) before DMS sees it.
+- `BorderSurface.qml` keeps an inert `borderSpec` property that no call site sets or reads; DMS ships no `Border`
+  singleton, so nothing should start using it without a DMS-side equivalent.
 - `hypr/` integration from the Omarchy plugin is not ported; use DMS keybinds/IPCs instead (e.g. `dms ipc call gentle-dot.client openChat`).
