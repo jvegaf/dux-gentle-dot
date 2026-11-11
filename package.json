@@ -1,8 +1,8 @@
 {
-  "name": "omarchy-gentle-dot",
+  "name": "dux-gentle-dot",
   "private": true,
   "type": "module",
-  "description": "Native Omarchy plugin for Gentle Dot",
+  "description": "Native Dux/DankMaterialShell plugin for Gentle Dot",
   "scripts": {
     "test": "node --test test/*.test.mjs"
   },

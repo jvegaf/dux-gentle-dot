@@ -35,7 +35,7 @@ PanelWindow {
   implicitWidth: contentWidth
   implicitHeight: contentHeight
 
-  WlrLayershell.namespace: "omarchy-gentle-dot-sticky"
+  WlrLayershell.namespace: "gentle-dot-sticky"
   WlrLayershell.layer: WlrLayer.Overlay
   // Never prime with Exclusive: other windows must remain usable when pinned.
   WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None

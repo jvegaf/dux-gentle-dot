@@ -1,22 +1,23 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.Modules.Plugins
+import qs.Services
 import "bridge/time-format.mjs" as TimeFormat
 import "bridge/attachments.mjs" as Attachments
 import "privacy.mjs" as Privacy
 import "avatar/mood.mjs" as Mood
 import "status.mjs" as Status
 
-// The plugin's shared service: one connection to the Gentle Dot daemon and its
-// conversation for every bar widget instance (the bar makes one per monitor).
-// The daemon WebSocket is relayed by bridge/bridge.mjs as newline-delimited JSON
-// over stdio (contract at the top of that file). Widgets look this object up with
-// bar.shell.serviceFor("omarchy-gentle-dot") and push their settings through
-// configure(); the bridge starts once the first settings arrive.
-Item {
+// The plugin's shared daemon service: one connection to the Gentle Dot daemon and
+// its conversation for every widget instance. The daemon WebSocket is relayed by
+// bridge/bridge.mjs as newline-delimited JSON over stdio. Widgets reach this
+// instance via PluginService.pluginDaemonInstances[pluginId].
+PluginComponent {
   id: client
 
-  readonly property string pluginId: "omarchy-gentle-dot"
+  pluginId: "gentle-dot"
+  pluginService: PluginService
   readonly property string localUrl: "ws://127.0.0.1:4317/ws"
   readonly property string localTokenFile: "~/.gentle-dot/token"
   readonly property string remotesDir: "~/.config/gentle-dot/remotes"
@@ -118,7 +119,7 @@ Item {
   property var clipboardListCommand: ["wl-paste", "--list-types"]
   property var clipboardPasteCommand: ["wl-paste"]
   property var imageCopyCommand: ["wl-copy"]
-  readonly property string pasteDir: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/omarchy-gentle-dot"
+  readonly property string pasteDir: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/gentle-dot"
   // Where the bridge caches the files it fetches: <cacheDir>/<uploadId>/<name> (bridge/bridge.mjs).
   readonly property string cacheDir: pasteDir + "/cache"
 
@@ -157,7 +158,7 @@ Item {
 
   // A result the client did not ask for, or not about what it asked: logged without its content.
   function dropped(type, why) {
-    console.warn("omarchy-gentle-dot: dropped " + String(type || "a message").slice(0, 40) + " from the bridge: " + why)
+    console.warn("gentle-dot: dropped " + String(type || "a message").slice(0, 40) + " from the bridge: " + why)
   }
 
   // Files the panel may show, open, copy or attach again: those the user attached or this client
@@ -345,7 +346,7 @@ Item {
   function openFile(path) {
     if (!path) return false
     if (!knownPath(path)) {
-      console.warn("omarchy-gentle-dot: refused to open a file the panel did not attach or fetch")
+      console.warn("gentle-dot: refused to open a file the panel did not attach or fetch")
       return false
     }
     if (!Attachments.safeToOpen(path, typeOf(path))) {
@@ -390,7 +391,7 @@ Item {
     if (!image) return
     var path = String(image.path || "")
     if (path && !knownPath(path)) {
-      console.warn("omarchy-gentle-dot: refused to show a file the panel did not attach or fetch")
+      console.warn("gentle-dot: refused to show a file the panel did not attach or fetch")
       return
     }
     var url = path ? Attachments.fileUrl(path) : Attachments.allowedImageUrl(image.url)
@@ -984,7 +985,7 @@ Item {
     var match = /^v(\d+)\./.exec(String(version || "").trim())
     if (exitCode !== 0 || !match) nodeFailed("node_missing")
     else if (Number(match[1]) < nodeMinMajor) {
-      console.warn("omarchy-gentle-dot: " + (path || "node") + " is " + String(version).trim() + "; the bridge needs Node.js " + nodeMinMajor + "+")
+      console.warn("gentle-dot: " + (path || "node") + " is " + String(version).trim() + "; the bridge needs Node.js " + nodeMinMajor + "+")
       nodeFailed("node_too_old")
     } else {
       nodeVerified = path
@@ -1123,17 +1124,17 @@ Item {
     try {
       envelope = JSON.parse(line)
     } catch (e) {
-      console.warn("omarchy-gentle-dot: dropped an unreadable bridge line (" + String(line).length + " characters)")
+      console.warn("gentle-dot: dropped an unreadable bridge line (" + String(line).length + " characters)")
       return
     }
     var msg = envelope && typeof envelope === "object" ? envelope.msg : null
     if (!msg || typeof msg !== "object" || Array.isArray(msg)) {
-      console.warn("omarchy-gentle-dot: dropped a bridge line without a message")
+      console.warn("gentle-dot: dropped a bridge line without a message")
       return
     }
     if (envelope.from === "daemon") handleDaemon(msg)
     else if (envelope.from === "bridge") handleBridge(msg)
-    else console.warn("omarchy-gentle-dot: dropped a bridge line of unknown origin")
+    else console.warn("gentle-dot: dropped a bridge line of unknown origin")
   }
 
   // A frame from the daemon: the conversation, asks, agent state, toasts and errors only.
@@ -1226,7 +1227,7 @@ Item {
         break
       case "bridge_error":
         if (msg.code === "not_connected") showNotice(msg.message, "warning")
-        else console.warn("omarchy-gentle-dot bridge:", msg.code, msg.message)
+        else console.warn("gentle-dot bridge:", msg.code, msg.message)
         break
       case "files_inspected":
         var asked = own(inspectRequests, msg.requestId) ? inspectRequests[msg.requestId] : null
@@ -1325,7 +1326,7 @@ Item {
     }
 
     stderr: SplitParser {
-      onRead: function(line) { console.warn("omarchy-gentle-dot bridge:", line) }
+      onRead: function(line) { console.warn("gentle-dot bridge:", line) }
     }
 
     // Quickshell emits no exited() when the command cannot start (nodePath not found):
@@ -1478,9 +1479,9 @@ Item {
     }
   }
 
-  // Scriptable entry points: `quickshell ipc -p $OMARCHY_PATH/shell call omarchy-gentle-dot.client <fn>`.
+  // Scriptable entry points: `quickshell ipc -p $OMARCHY_PATH/shell call gentle-dot.client <fn>`.
   IpcHandler {
-    target: "omarchy-gentle-dot.client"
+    target: "gentle-dot.client"
 
     // `asks` returns protocol Ask objects; `answer <id> '{"value":"…"}'`,
     // '{"confirmed":true|false}' or '{"cancelled":true}' returns sent or an error.

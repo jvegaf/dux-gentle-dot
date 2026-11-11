@@ -1,0 +1,17 @@
+{
+  "id": "gentle-dot",
+  "name": "Gentle Dot",
+  "description": "Native chat panel for Gentle Dot on Dux/DankMaterialShell.",
+  "version": "0.1.0",
+  "author": "dux-gentle-dot",
+  "license": "MIT",
+  "type": "composite",
+  "capabilities": ["dankbar-widget", "daemon"],
+  "components": {
+    "daemon": "./Client.qml",
+    "widget": "./Panel.qml"
+  },
+  "settings": "./SettingsView.qml",
+  "icon": "chat_bubble",
+  "permissions": ["settings_read", "settings_write", "process", "network"]
+}

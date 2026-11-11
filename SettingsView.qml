@@ -75,7 +75,7 @@ FocusScope {
     if (!Array.isArray(binds)) return {state: "unknown", keys: "SUPER + ALT + D"}
     for (var i = 0; i < binds.length; i++) {
       var bind = binds[i] || {}
-      if (bind.description === "Gentle Dot" || /omarchy-shell\s+shell\s+toggle\s+omarchy-gentle-dot\b/.test(String(bind.arg || ""))) {
+      if (bind.description === "Gentle Dot" || /omarchy-shell\s+shell\s+toggle\s+gentle-dot\b/.test(String(bind.arg || ""))) {
         var mods = []
         var names = [[64, "SUPER"], [4, "CTRL"], [8, "ALT"], [1, "SHIFT"]]
         for (var j = 0; j < names.length; j++) if (bind.modmask & names[j][0]) mods.push(names[j][1])
@@ -353,7 +353,7 @@ FocusScope {
       Label {
         width: parent.width
         text: root.client.voice.ready ? "Voice is ready." : "Private, on-device dictation; only text is sent. Enable voice installs the speech runtime"
-          + " (about 35 MB) in ~/.local/share/omarchy-gentle-dot and downloads the model (487 MB, ~640 MiB extracted)."
+          + " (about 35 MB) in ~/.local/share/gentle-dot and downloads the model (487 MB, ~640 MiB extracted)."
       }
       Label {
         width: parent.width

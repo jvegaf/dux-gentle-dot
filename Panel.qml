@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Window
 import Quickshell
 import Quickshell.Wayland
+import qs.Services
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
@@ -9,8 +10,8 @@ import qs.Ui
 Panel {
   id: root
 
-  moduleName: "omarchy-gentle-dot"
-  ipcTarget: "omarchy-gentle-dot"
+  moduleName: "gentle-dot"
+  ipcTarget: "gentle-dot"
 
   readonly property color foreground: bar ? bar.barForeground : Commons.Color.foreground
   readonly property color urgent: bar ? bar.urgent : Commons.Color.urgent
@@ -22,10 +23,8 @@ Panel {
     return Qt.rgba(base.r, base.g, base.b, base.a * (client ? client.panelOpacity : 0.95))
   }
 
-  // The plugin's shared service (Client.qml): one daemon connection for every
-  // monitor's copy of this widget.
-  readonly property var client: bar && bar.shell && typeof bar.shell.serviceFor === "function"
-    ? bar.shell.serviceFor("omarchy-gentle-dot") : null
+  // The plugin's shared daemon (Client.qml), reached via DMS PluginService.
+  readonly property var client: PluginService.pluginDaemonInstances["gentle-dot"] ?? null
 
   readonly property bool pinned: client ? client.panelPinned : false
   readonly property bool detached: client ? client.detached : false
@@ -296,7 +295,7 @@ Panel {
     visible: root.contentOpen && !!root.client && root.client.viewerImage !== null
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.namespace: "omarchy-gentle-dot-image"
+    WlrLayershell.namespace: "gentle-dot-image"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     anchors { top: true; bottom: true; left: true; right: true }
